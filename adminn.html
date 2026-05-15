@@ -6,46 +6,65 @@
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 <style>
-    body { font-family: sans-serif; background: #f2f4f6; padding: 40px; }
-    .card { background: #fff; padding: 30px; border-radius: 20px; margin-bottom: 20px; border: 1px solid #eee; }
-    h2 { margin-bottom: 20px; font-size: 18px; }
-    input, textarea, select { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; }
-    button { padding: 12px 20px; border-radius: 8px; border: none; background: #3182f6; color: #fff; font-weight: 700; cursor: pointer; }
-    .item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
+  :root { --accent: #3182F6; --bg: #f2f4f6; }
+  body { font-family: sans-serif; background: var(--bg); padding: 40px; margin: 0; }
+  .sidebar { width: 240px; position: fixed; left: 40px; top: 40px; }
+  .main-content { margin-left: 280px; }
+  .tab-btn { width: 100%; padding: 16px; text-align: left; border: none; background: #fff; margin-bottom: 8px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+  .tab-btn.active { background: var(--accent); color: #fff; }
+  .card { background: #fff; padding: 32px; border-radius: 20px; border: 1px solid #eee; display: none; }
+  .card.active { display: block; }
+  h2 { margin-top: 0; margin-bottom: 24px; font-size: 20px; }
+  input, textarea, select { width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
+  button.submit { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; }
+  .list-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-bottom: 1px solid #eee; }
+  .list-item:last-child { border-bottom: none; }
+  .btn-sm { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; margin-left: 4px; }
 </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>📢 공지 등록</h2>
-    <input type="text" id="n-title" placeholder="공지 제목">
-    <textarea id="n-content" placeholder="공지 내용"></textarea>
-    <button onclick="addNotice()">공지사항 등록</button>
+<div class="sidebar">
+  <div style="font-size:24px; font-weight:900; color:var(--accent); margin-bottom:30px;">MACO Admin</div>
+  <button class="tab-btn active" onclick="showTab('tab-event')">🎪 이벤트 관리</button>
+  <button class="tab-btn" onclick="showTab('tab-coupon')">🎁 쿠폰 관리</button>
+  <button class="tab-btn" onclick="showTab('tab-server')">🎮 서버 관리</button>
+  <button class="tab-btn" onclick="showTab('tab-notice')">📢 공지 관리</button>
 </div>
 
-<div class="card">
-    <h2>🎮 서버 홍보 관리 (가로 스크롤)</h2>
-    <input type="text" id="s-name" placeholder="서버 이름">
-    <input type="text" id="s-author" placeholder="제작자 이름">
-    <button onclick="addServer()">서버 추가</button>
-    <div id="admin-servers" style="margin-top:15px;"></div>
-</div>
-
-<div class="card">
-    <h2>🎁 쿠폰 미리 등록</h2>
-    <input type="text" id="c-name" placeholder="쿠폰/상품 이름">
-    <button onclick="addCoupon()">쿠폰 데이터 추가</button>
-    <div id="admin-coupons"></div>
-</div>
-
-<div class="card">
-    <h2>🎪 이벤트 등록/수정</h2>
+<div class="main-content">
+  <div id="tab-event" class="card active">
+    <h2>🎪 이벤트 등록/목록</h2>
     <input type="text" id="e-title" placeholder="이벤트 제목">
-    <input type="text" id="e-img" placeholder="이미지 URL">
-    <textarea id="e-desc" placeholder="상세 설명"></textarea>
-    <select id="e-coupon-select"><option value="">상품 선택</option></select>
-    <button onclick="addEvent()">이벤트 등록/수정</button>
-    <div id="admin-events" style="margin-top:20px;"></div>
+    <input type="text" id="e-img" placeholder="이미지 URL (직접 입력 또는 업로드된 주소)">
+    <textarea id="e-desc" placeholder="상세 내용"></textarea>
+    <select id="e-coupon-select"></select>
+    <button class="submit" onclick="saveEvent()">이벤트 저장하기</button>
+    <div id="list-event" style="margin-top:30px; border-top:2px solid var(--bg);"></div>
+  </div>
+
+  <div id="tab-coupon" class="card">
+    <h2>🎁 쿠폰 데이터 미리 등록</h2>
+    <input type="text" id="c-name" placeholder="쿠폰명 (예: 다이아 100개)">
+    <button class="submit" onclick="saveCoupon()">쿠폰 등록</button>
+    <div id="list-coupon" style="margin-top:30px;"></div>
+  </div>
+
+  <div id="tab-server" class="card">
+    <h2>🎮 참여 가능 서버 관리</h2>
+    <input type="text" id="s-name" placeholder="서버 이름">
+    <input type="text" id="s-author" placeholder="제작자/서버장">
+    <button class="submit" onclick="saveServer()">서버 추가</button>
+    <div id="list-server" style="margin-top:30px;"></div>
+  </div>
+
+  <div id="tab-notice" class="card">
+    <h2>📢 상단 공지 등록</h2>
+    <input type="text" id="n-title" placeholder="공지 제목">
+    <textarea id="n-content" placeholder="공지 상세 내용"></textarea>
+    <button class="submit" onclick="saveNotice()">공지사항 등록</button>
+    <div id="list-notice" style="margin-top:30px;"></div>
+  </div>
 </div>
 
 <script>
@@ -60,64 +79,71 @@ firebase.initializeApp({
 });
 const db = firebase.database();
 
-// 공지
-async function addNotice() {
-    await db.ref('notices').push({title: document.getElementById('n-title').value, content: document.getElementById('n-content').value});
-    alert('공지 완료');
+function showTab(id) {
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
 }
 
-// 서버
-async function addServer() {
-    await db.ref('servers').push({name: document.getElementById('s-name').value, author: document.getElementById('s-author').value});
-    alert('서버 추가 완료');
+// 쿠폰 관리
+async function saveCoupon() {
+  const name = document.getElementById('c-name').value;
+  await db.ref('coupons').push({name});
+  document.getElementById('c-name').value = '';
 }
-
-// 쿠폰
-async function addCoupon() {
-    await db.ref('coupons').push({name: document.getElementById('c-name').value});
-    alert('쿠폰 등록 완료');
-}
-
-// 이벤트
-async function addEvent() {
-    const id = Date.now();
-    await db.ref('events/'+id).set({
-        title: document.getElementById('e-title').value,
-        img: document.getElementById('e-img').value,
-        desc: document.getElementById('e-desc').value,
-        couponName: document.getElementById('e-coupon-select').value,
-        status: 'ongoing',
-        createdAt: id
-    });
-    alert('이벤트 등록 완료');
-}
-
-// 관리자 리스트 로드
 db.ref('coupons').on('value', snap => {
-    const sel = document.getElementById('e-coupon-select');
-    sel.innerHTML = '<option value="">상품 선택</option>';
-    snap.forEach(c => { sel.innerHTML += `<option value="${c.val().name}">${c.val().name}</option>`; });
+  const list = document.getElementById('list-coupon');
+  const select = document.getElementById('e-coupon-select');
+  list.innerHTML = ''; select.innerHTML = '<option value="">지급할 쿠폰 선택</option>';
+  snap.forEach(c => {
+    list.innerHTML += `<div class="list-item"><span>${c.val().name}</span><button class="btn-sm" style="background:#ff4d4f; color:#fff" onclick="db.ref('coupons/${c.key}').remove()">삭제</button></div>`;
+    select.innerHTML += `<option value="${c.val().name}">${c.val().name}</option>`;
+  });
 });
 
+// 이벤트 관리
+async function saveEvent() {
+  const id = Date.now();
+  await db.ref('events/'+id).set({
+    title: document.getElementById('e-title').value,
+    img: document.getElementById('e-img').value,
+    desc: document.getElementById('e-desc').value,
+    couponName: document.getElementById('e-coupon-select').value,
+    status: 'ongoing'
+  });
+  alert('등록 완료');
+}
 db.ref('events').on('value', snap => {
-    const list = document.getElementById('admin-events');
-    list.innerHTML = '';
-    snap.forEach(e => {
-        list.innerHTML += `
-            <div class="item">
-                <span>${e.val().title}</span>
-                <div>
-                    <button style="background:#ff4d4f" onclick="updateEvent('${e.key}', 'ended')">즉시종료</button>
-                    <button style="background:#aaa" onclick="db.ref('events/${e.key}').remove()">삭제</button>
-                </div>
-            </div>
-        `;
-    });
+  const list = document.getElementById('list-event');
+  list.innerHTML = '';
+  snap.forEach(e => {
+    list.innerHTML += `
+      <div class="list-item">
+        <span>${e.val().title} (${e.val().status})</span>
+        <div>
+          <button class="btn-sm" style="background:#3182f6; color:#fff" onclick="db.ref('events/${e.key}').update({status:'ended'})">종료</button>
+          <button class="btn-sm" style="background:#ff4d4f; color:#fff" onclick="db.ref('events/${e.key}').remove()">삭제</button>
+        </div>
+      </div>`;
+  });
 });
 
-async function updateEvent(id, status) {
-    await db.ref('events/'+id).update({status});
-    alert('상태 변경 완료');
+// 서버 관리
+async function saveServer() {
+  await db.ref('servers').push({name:document.getElementById('s-name').value, author:document.getElementById('s-author').value});
+}
+db.ref('servers').on('value', snap => {
+  const list = document.getElementById('list-server');
+  list.innerHTML = '';
+  snap.forEach(s => {
+    list.innerHTML += `<div class="list-item"><span>${s.val().name} (${s.val().author})</span><button class="btn-sm" style="background:#ff4d4f; color:#fff" onclick="db.ref('servers/${s.key}').remove()">삭제</button></div>`;
+  });
+});
+
+// 공지 관리
+async function saveNotice() {
+  await db.ref('notices').push({title:document.getElementById('n-title').value, content:document.getElementById('n-content').value});
 }
 </script>
 </body>
