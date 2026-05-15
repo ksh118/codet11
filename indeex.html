@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>마코 - MACO</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -12,109 +11,99 @@
 :root {
   --bg: #F2F4F6; --surface: #FFFFFF; --border: #E5E8EB;
   --text: #191F28; --text2: #4E5968; --text3: #8B95A1;
-  --accent: #3182F6; --r: 18px;
+  --accent: #3182F6; --r: 20px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
+body { background: var(--bg); color: var(--text); line-height: 1.5; }
 
 /* Header */
-.header { height: 60px; background: var(--surface); display: flex; align-items: center; padding: 0 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
-.logo { font-size: 24px; font-weight: 900; color: var(--accent); }
+.header { height: 64px; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
+.logo { font-size: 22px; font-weight: 900; color: var(--accent); letter-spacing: -1px; }
 
-/* Auto Scroll Server Banner */
-.server-banner { background: #fff; padding: 20px 0; border-bottom: 1px solid var(--border); overflow: hidden; position: relative; }
-.server-track { display: flex; gap: 20px; animation: scroll 20s linear infinite; width: max-content; }
+/* Server Slider */
+.server-section { background: #fff; padding: 24px 0; border-bottom: 1px solid var(--border); overflow: hidden; }
+.slider-title { max-width: 1000px; margin: 0 auto 12px; padding: 0 24px; font-size: 13px; font-weight: 700; color: var(--text3); }
+.server-viewport { display: flex; overflow: hidden; position: relative; width: 100%; }
+.server-track { display: flex; gap: 16px; animation: scroll 30s linear infinite; padding-left: 16px; }
 @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-.server-card { background: var(--bg); padding: 15px 25px; border-radius: 12px; min-width: 250px; }
-.server-card h4 { font-size: 16px; margin-bottom: 4px; }
-.server-card p { font-size: 13px; color: var(--text3); }
+.server-card { background: var(--bg); padding: 16px 24px; border-radius: 16px; min-width: 220px; flex-shrink: 0; }
+.server-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+.server-card p { font-size: 12px; color: var(--text2); }
 
-/* Main Layout */
-.container { max-width: 1000px; margin: 0 auto; padding: 24px 20px; }
-.section-title { font-size: 20px; font-weight: 800; margin: 32px 0 16px; display: flex; align-items: center; gap: 8px; }
+/* Layout */
+.container { max-width: 1000px; margin: 0 auto; padding: 32px 24px; }
+.section-header { margin: 40px 0 20px; display: flex; align-items: center; justify-content: space-between; }
+.section-title { font-size: 22px; font-weight: 800; }
 
-/* Event Cards */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-.card { background: var(--surface); border-radius: var(--r); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; }
-.card:hover { transform: translateY(-5px); }
-.card-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #eee; }
-.card-body { padding: 18px; }
-.status-tag { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-bottom: 8px; }
-.status-on { background: #EBF3FE; color: var(--accent); }
-.status-off { background: #F2F4F6; color: var(--text3); }
+/* Grid & Cards */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
+.card { background: var(--surface); border-radius: var(--r); overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.04); cursor: pointer; transition: 0.3s; border: 1px solid rgba(0,0,0,0.02); }
+.card:hover { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
+.card-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+.card-content { padding: 20px; }
+.badge { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; margin-bottom: 10px; }
+.badge-on { background: #EBF3FE; color: var(--accent); }
+.badge-off { background: #F2F4F6; color: var(--text3); }
 
 /* Modal */
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
 .modal.active { display: flex; }
-.modal-content { background: #fff; width: 100%; max-width: 500px; border-radius: 24px; padding: 32px; position: relative; max-height: 90vh; overflow-y: auto; }
-.close-btn { position: absolute; top: 20px; right: 20px; font-size: 24px; cursor: pointer; border: none; background: none; }
+.modal-content { background: #fff; width: 100%; max-width: 540px; border-radius: 28px; padding: 32px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
 
-/* Auth */
+/* Auth Overlay */
 #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-.auth-box { background: #fff; padding: 40px; border-radius: 30px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
-.input-group { text-align: left; margin-bottom: 15px; }
-.input-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text3); margin-bottom: 5px; }
-.input-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; outline: none; }
-.btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; background: var(--accent); color: #fff; margin-top: 10px; }
+.auth-box { background: #fff; padding: 48px 32px; border-radius: 32px; width: 100%; max-width: 400px; box-shadow: 0 12px 40px rgba(0,0,0,0.06); text-align: center; }
+.auth-input { width: 100%; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 14px; outline: none; font-size: 15px; background: #F9FAFB; }
+.auth-input:focus { border-color: var(--accent); background: #fff; }
+.btn-main { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; font-size: 16px; }
 </style>
 </head>
 <body>
 
 <div id="auth-screen">
   <div class="auth-box">
-    <div class="logo" style="margin-bottom: 30px;">마코</div>
-    <div id="auth-toggle" style="margin-bottom: 20px; display: flex; background: #f2f4f6; padding: 5px; border-radius: 10px;">
-        <button onclick="setAuth('login')" id="btn-login" style="flex:1; padding:8px; border:none; border-radius:8px; background:#fff; font-weight:700;">로그인</button>
-        <button onclick="setAuth('join')" id="btn-join" style="flex:1; padding:8px; border:none; border-radius:8px; background:transparent; color:#8b95a1;">회원가입</button>
+    <div class="logo" style="margin-bottom: 40px;">마코</div>
+    <div id="auth-ui">
+      <input type="text" id="user-nick" class="auth-input" placeholder="마인크래프트 닉네임">
+      <div id="join-fields" style="display:none;">
+        <input type="text" id="user-discord" class="auth-input" placeholder="디스코드 사용자명">
+      </div>
+      <input type="password" id="user-pw" class="auth-input" placeholder="비밀번호 (숫자)">
+      <button class="btn-main" onclick="handleAuth()">시작하기</button>
+      <p id="auth-toggle-msg" onclick="toggleAuthMode()" style="margin-top:20px; font-size:13px; color:var(--text3); cursor:pointer;">계정이 없으신가요? 회원가입</p>
     </div>
-    <div class="input-group">
-      <label>마인크래프트 닉네임</label>
-      <input type="text" id="user-nick" placeholder="닉네임 입력">
-    </div>
-    <div class="input-group" id="discord-group" style="display:none;">
-      <label>디스코드 사용자명</label>
-      <input type="text" id="user-discord" placeholder="username">
-    </div>
-    <div class="input-group">
-      <label>비밀번호 (숫자 4~10자)</label>
-      <input type="password" id="user-pw" maxlength="10">
-    </div>
-    <button class="btn" onclick="handleAuth()">시작하기</button>
   </div>
 </div>
 
 <div class="header">
   <div class="logo">마코</div>
-  <div id="user-display" style="margin-left:auto; font-size:14px; font-weight:700;"></div>
+  <div id="user-info" style="margin-left:auto; font-size:14px; font-weight:700;"></div>
 </div>
 
-<div class="server-banner">
-  <div class="server-track" id="server-list">
-    </div>
+<div class="server-section">
+  <div class="slider-title">참여 가능 서버</div>
+  <div class="server-viewport">
+    <div class="server-track" id="server-track"></div>
+  </div>
 </div>
 
 <div class="container">
-  <div class="section-title">📢 공지사항</div>
-  <div id="notice-area" style="background:#fff; padding:20px; border-radius:15px; border:1px solid var(--border); margin-bottom:20px;">
-    공지사항이 없습니다.
+  <div id="notice-banner" style="background:var(--accent); color:#fff; padding:16px 24px; border-radius:16px; margin-bottom:32px; display:none;">
+    <span style="font-weight:800; margin-right:8px;">공지</span> <span id="notice-text"></span>
   </div>
 
-  <div class="section-title">🔥 진행중인 이벤트</div>
-  <div class="grid" id="ongoing-events"></div>
+  <div class="section-header"><div class="section-title">진행 중인 이벤트</div></div>
+  <div class="grid" id="ongoing-grid"></div>
 
-  <div class="section-title">⌛ 종료된 이벤트</div>
-  <div class="grid" id="ended-events"></div>
+  <div class="section-header"><div class="section-title">종료된 이벤트</div></div>
+  <div class="grid" id="ended-grid"></div>
 </div>
 
-<div class="modal" id="detail-modal" onclick="closeModal(event)">
-  <div class="modal-content">
-    <button class="close-btn" onclick="document.getElementById('detail-modal').classList.remove('active')">&times;</button>
-    <div id="modal-body"></div>
-  </div>
+<div class="modal" id="modal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="modal-content" id="modal-content"></div>
 </div>
 
 <script>
-// Firebase 설정
 firebase.initializeApp({
   apiKey: "AIzaSyDIl0-jomcfA8ykz-nYK_rYaLb-IE_yICc",
   authDomain: "codet-597c7.firebaseapp.com",
@@ -125,117 +114,110 @@ firebase.initializeApp({
   appId: "1:619578457920:web:52d98e7430f9b9820104a5"
 });
 const db = firebase.database();
-let currentAuth = 'login';
+let isJoin = false;
 let user = null;
 
-// Auth 처리
-function setAuth(m) {
-    currentAuth = m;
-    document.getElementById('discord-group').style.display = m === 'join' ? 'block' : 'none';
-    document.getElementById('btn-login').style.background = m === 'login' ? '#fff' : 'transparent';
-    document.getElementById('btn-join').style.background = m === 'join' ? '#fff' : 'transparent';
+function toggleAuthMode() {
+  isJoin = !isJoin;
+  document.getElementById('join-fields').style.display = isJoin ? 'block' : 'none';
+  document.getElementById('auth-toggle-msg').innerText = isJoin ? '이미 계정이 있나요? 로그인' : '계정이 없으신가요? 회원가입';
 }
 
 async function handleAuth() {
-    const nick = document.getElementById('user-nick').value;
-    const pw = document.getElementById('user-pw').value;
+  const nick = document.getElementById('user-nick').value;
+  const pw = document.getElementById('user-pw').value;
+  if(isJoin) {
     const discord = document.getElementById('user-discord').value;
+    await db.ref('users/'+nick).set({pw, discord});
+    user = {nick, discord};
+  } else {
+    const snap = await db.ref('users/'+nick).once('value');
+    if(!snap.exists() || snap.val().pw !== pw) return alert('닉네임 또는 비밀번호가 틀립니다.');
+    user = {nick, discord: snap.val().discord};
+  }
+  localStorage.setItem('maco_session', JSON.stringify(user));
+  location.reload();
+}
 
-    if(currentAuth === 'join') {
-        await db.ref('users/'+nick).set({pw, discord});
-        user = {nick, discord};
-    } else {
-        const snap = await db.ref('users/'+nick).once('value');
-        if(!snap.exists() || snap.val().pw !== pw) return alert('정보가 틀립니다.');
-        user = {nick, discord: snap.val().discord};
-    }
-    localStorage.setItem('maco_user', JSON.stringify(user));
+window.onload = () => {
+  const saved = localStorage.getItem('maco_session');
+  if(saved) {
+    user = JSON.parse(saved);
     document.getElementById('auth-screen').style.display = 'none';
-    init();
-}
+    document.getElementById('user-info').innerText = user.nick + '님';
+    loadContent();
+  }
+};
 
-// 초기 데이터 로드
-function init() {
-    user = JSON.parse(localStorage.getItem('maco_user'));
-    if(!user) return;
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('user-display').innerText = user.nick + '님';
-    
-    // 서버 목록 로드
-    db.ref('servers').on('value', snap => {
-        const track = document.getElementById('server-list');
-        let html = '';
-        snap.forEach(s => {
-            const data = s.val();
-            html += `<div class="server-card"><h4>${data.name}</h4><p>제작: ${data.author}</p></div>`;
-        });
-        track.innerHTML = html + html; // 무한스크롤을 위해 2번 반복
+function loadContent() {
+  // 공지
+  db.ref('notices').limitToLast(1).on('value', snap => {
+    snap.forEach(n => {
+      document.getElementById('notice-banner').style.display = 'block';
+      document.getElementById('notice-text').innerText = n.val().title;
     });
+  });
 
-    // 공지 로드
-    db.ref('notices').limitToLast(1).on('value', snap => {
-        snap.forEach(n => {
-            document.getElementById('notice-area').innerHTML = `<b>${n.val().title}</b><p style="font-size:14px; margin-top:5px;">${n.val().content}</p>`;
-        });
+  // 서버 슬라이드
+  db.ref('servers').on('value', snap => {
+    const track = document.getElementById('server-track');
+    let content = '';
+    snap.forEach(s => {
+      content += `<div class="server-card"><h4>${s.val().name}</h4><p>${s.val().author}</p></div>`;
     });
+    track.innerHTML = content + content; // 무한 스크롤 보정
+  });
 
-    // 이벤트 로드
-    db.ref('events').on('value', snap => {
-        const ongoing = document.getElementById('ongoing-events');
-        const ended = document.getElementById('ended-events');
-        ongoing.innerHTML = ended.innerHTML = '';
-
-        snap.forEach(e => {
-            const ev = e.val();
-            const isEnded = ev.status === 'ended';
-            const html = `
-                <div class="card" onclick="openDetail('${e.key}')">
-                    <img src="${ev.img}" class="card-img">
-                    <div class="card-body">
-                        <span class="status-tag ${isEnded?'status-off':'status-on'}">${isEnded?'종료됨':'진행중'}</span>
-                        <h3 style="font-size:17px;">${ev.title}</h3>
-                    </div>
-                </div>
-            `;
-            if(isEnded) ended.innerHTML += html;
-            else ongoing.innerHTML += html;
-        });
+  // 이벤트
+  db.ref('events').on('value', snap => {
+    const ongoing = document.getElementById('ongoing-grid');
+    const ended = document.getElementById('ended-grid');
+    ongoing.innerHTML = ended.innerHTML = '';
+    snap.forEach(e => {
+      const ev = e.val();
+      const isEnd = ev.status === 'ended';
+      const card = `
+        <div class="card" onclick="openEvent('${e.key}')">
+          <img src="${ev.img}" class="card-img">
+          <div class="card-content">
+            <span class="badge ${isEnd?'badge-off':'badge-on'}">${isEnd?'종료됨':'진행중'}</span>
+            <h3 style="font-size:18px; font-weight:800;">${ev.title}</h3>
+          </div>
+        </div>`;
+      if(isEnd) ended.innerHTML += card;
+      else ongoing.innerHTML += card;
     });
+  });
 }
 
-async function openDetail(id) {
-    const snap = await db.ref('events/'+id).once('value');
-    const ev = snap.val();
-    const partSnap = await db.ref('event_participants/'+id).once('value');
-    let partList = '';
-    partSnap.forEach(p => { partList += `<li>${p.val().nick}</li>`; });
+async function openEvent(id) {
+  const ev = (await db.ref('events/'+id).once('value')).val();
+  const parts = await db.ref('event_participants/'+id).once('value');
+  let partList = '';
+  parts.forEach(p => { partList += `<li>${p.val().nick}</li>`; });
 
-    document.getElementById('modal-body').innerHTML = `
-        <img src="${ev.img}" style="width:100%; border-radius:15px; margin-bottom:20px;">
-        <h2 style="font-weight:900; margin-bottom:10px;">${ev.title}</h2>
-        <p style="color:var(--text2); margin-bottom:20px;">${ev.desc}</p>
-        <div style="background:var(--bg); padding:15px; border-radius:12px; margin-bottom:20px;">
-            <div style="font-size:13px; font-weight:700; color:var(--text3);">증정 쿠폰</div>
-            <div style="font-size:16px; font-weight:700;">${ev.couponName}</div>
-        </div>
-        <button class="btn" onclick="applyEvent('${id}')">이벤트 참여하기</button>
-        <div style="margin-top:25px;">
-            <h4 style="font-size:14px; margin-bottom:10px;">현재 참여자 명단</h4>
-            <ul style="font-size:13px; color:var(--text2); padding-left:20px;">${partList || '참여자가 없습니다.'}</ul>
-        </div>
-    `;
-    document.getElementById('detail-modal').classList.add('active');
+  document.getElementById('modal-content').innerHTML = `
+    <img src="${ev.img}" style="width:100%; border-radius:16px; margin-bottom:24px;">
+    <h2 style="font-size:24px; font-weight:900; margin-bottom:12px;">${ev.title}</h2>
+    <p style="color:var(--text2); margin-bottom:24px;">${ev.desc}</p>
+    <div style="background:var(--bg); padding:20px; border-radius:16px; margin-bottom:24px;">
+        <span style="font-size:12px; color:var(--text3); font-weight:700;">지급 쿠폰</span>
+        <div style="font-size:18px; font-weight:800; color:var(--accent);">${ev.couponName}</div>
+    </div>
+    <button class="btn-main" onclick="joinEvent('${id}')">참여하기</button>
+    <div style="margin-top:32px;">
+      <h4 style="font-size:14px; margin-bottom:12px;">참여자 명단</h4>
+      <ul style="font-size:13px; color:var(--text2); display:grid; grid-template-columns:1fr 1fr; gap:8px;">${partList || '참여자가 없습니다.'}</ul>
+    </div>
+  `;
+  document.getElementById('modal').classList.add('active');
 }
 
-async function applyEvent(id) {
-    await db.ref(`event_participants/${id}/${user.nick}`).set({nick: user.nick, time: Date.now()});
-    alert('참여 완료!');
-    openDetail(id);
+async function joinEvent(id) {
+  await db.ref(`event_participants/${id}/${user.nick}`).set({nick: user.nick, time: Date.now()});
+  alert('이벤트 참여가 완료되었습니다!');
+  openEvent(id);
 }
-
-function closeModal(e) { if(e.target.id === 'detail-modal') e.target.classList.remove('active'); }
-
-window.onload = init;
 </script>
 </body>
 </html>
