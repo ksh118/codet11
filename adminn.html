@@ -1,115 +1,63 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<title>마코 관리자 - MACO Admin</title>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-storage-compat.js"></script>
-<style>
-  body { font-family: sans-serif; background: #f2f4f6; padding: 40px; display: flex; gap: 40px; }
-  .sidebar { width: 220px; }
-  .tab-btn { width: 100%; padding: 15px; text-align: left; border: none; background: #fff; border-radius: 12px; margin-bottom: 10px; font-weight: 700; cursor: pointer; }
-  .tab-btn.active { background: #3182f6; color: #fff; }
-  .content { flex: 1; background: #fff; padding: 40px; border-radius: 24px; }
-  .card { display: none; }
-  .card.active { display: block; }
-  input, textarea, select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; }
-  button.main { width: 100%; padding: 15px; background: #3182f6; color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
-  .list-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
-</style>
-</head>
-<body>
+<div id="tab-ev" class="card active">
+  <h3>🎪 이벤트 & 당첨자 관리</h3>
+  <div id="admin-event-list" style="margin-top:40px;">
+    </div>
 
-<div class="sidebar">
-  <h2 style="color:#3182f6; margin-bottom:30px;">MACO Admin</h2>
-  <button class="tab-btn active" onclick="showTab('tab-ev')">🎪 이벤트 관리</button>
-  <button class="tab-btn" onclick="showTab('tab-cp')">🎁 쿠폰 미리등록</button>
-  <button class="tab-btn" onclick="showTab('tab-sv')">🎮 서버 관리</button>
-</div>
-
-<div class="content">
-  <div id="tab-ev" class="card active">
-    <h3>이벤트 등록</h3>
-    <input type="text" id="e-title" placeholder="제목">
-    <label>이미지 업로드</label><input type="file" id="e-file">
-    <textarea id="e-desc" placeholder="내용"></textarea>
-    <select id="e-coupon-select"></select>
-    <button class="main" onclick="saveEvent()">이벤트 저장하기</button>
-    <div id="list-ev" style="margin-top:40px;"></div>
-  </div>
-
-  <div id="tab-cp" class="card">
-    <h3>쿠폰 데이터 등록</h3>
-    <input type="text" id="c-name" placeholder="쿠폰명">
-    <button class="main" onclick="saveCoupon()">쿠폰 추가</button>
-    <div id="list-cp" style="margin-top:20px;"></div>
-  </div>
-
-  <div id="tab-sv" class="card">
-    <h3>서버 홍보 관리</h3>
-    <input type="text" id="s-name" placeholder="서버이름">
-    <input type="text" id="s-author" placeholder="제작자">
-    <button class="main" onclick="saveServer()">서버 추가</button>
-    <div id="list-sv" style="margin-top:20px;"></div>
+  <div id="participant-manage" style="margin-top:40px; background:#f9fafb; padding:20px; border-radius:15px; display:none;">
+    <h4>👥 참여자 목록 (클릭하여 당첨자 선정)</h4>
+    <p style="font-size:12px; color:red;">* 유저를 클릭하면 즉시 당첨자로 등록되며 유저에게 팝업이 뜹니다.</p>
+    <div id="user-list" style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;"></div>
   </div>
 </div>
 
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyDIl0-jomcfA8ykz-nYK_rYaLb-IE_yICc",
-  authDomain: "codet-597c7.firebaseapp.com",
-  databaseURL: "https://codet-597c7-default-rtdb.firebaseio.com",
-  projectId: "codet-597c7",
-  storageBucket: "codet-597c7.appspot.com",
-  messagingSenderId: "619578457920",
-  appId: "1:619578457920:web:52d98e7430f9b9820104a5"
-});
-const db = firebase.database();
-const storage = firebase.storage();
+// ... (기존 설정 로직)
 
-function showTab(id) {
-  document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  event.target.classList.add('active');
-}
+let selectedEventId = null;
 
-async function saveEvent() {
-  const file = document.getElementById('e-file').files[0];
-  let url = "";
-  if(file) {
-    const ref = storage.ref('maco/'+Date.now());
-    await ref.put(file);
-    url = await ref.getDownloadURL();
-  }
-  await db.ref('events/'+Date.now()).set({
-    title: document.getElementById('e-title').value,
-    img: url, desc: document.getElementById('e-desc').value,
-    couponName: document.getElementById('e-coupon-select').value,
-    status: 'ongoing'
-  });
-  alert('저장 완료'); location.reload();
-}
-
-// 쿠폰/서버 저장 로직 (기존과 동일)
-async function saveCoupon() { await db.ref('coupons').push({name: document.getElementById('c-name').value}); }
-async function saveServer() { await db.ref('servers').push({name: document.getElementById('s-name').value, author: document.getElementById('s-author').value}); }
-
-// 리스트 로드 및 삭제/종료 기능
-db.ref('coupons').on('value', snap => {
-  const sel = document.getElementById('e-coupon-select');
-  sel.innerHTML = '<option>쿠폰 선택</option>';
-  snap.forEach(c => { sel.innerHTML += `<option>${c.val().name}</option>`; });
-});
-
+// 이벤트 목록 로드
 db.ref('events').on('value', snap => {
-  const list = document.getElementById('list-ev');
-  list.innerHTML = '';
+  const list = document.getElementById('admin-event-list');
+  list.innerHTML = '<h4>이벤트 목록 (참여자 확인하려면 클릭)</h4>';
   snap.forEach(e => {
-    list.innerHTML += `<div class="list-item"><span>${e.val().title}</span><button onclick="db.ref('events/${e.key}').update({status:'ended'})">종료</button></div>`;
+    list.innerHTML += `
+      <div class="list-item" onclick="loadParticipants('${e.key}')" style="cursor:pointer; background:#fff; margin-bottom:10px;">
+        <span>${e.val().title} [${e.val().status}]</span>
+        <button onclick="db.ref('events/${e.key}').update({status:'ended'})">종료하기</button>
+      </div>`;
   });
 });
+
+// 참여자 목록 로드 및 당첨자 선정
+async function loadParticipants(id) {
+  selectedEventId = id;
+  const pSnap = await db.ref('participants/'+id).once('value');
+  const eSnap = await db.ref('events/'+id).once('value');
+  const winners = eSnap.val().winners || {};
+  
+  const userList = document.getElementById('user-list');
+  document.getElementById('participant-manage').style.display = 'block';
+  userList.innerHTML = '';
+  
+  pSnap.forEach(p => {
+    const nick = p.val().nick;
+    const isWin = winners[nick];
+    userList.innerHTML += `
+      <div onclick="toggleWinner('${nick}')" style="padding:10px 15px; border-radius:30px; cursor:pointer; background:${isWin?'#3182f6':'#eee'}; color:${isWin?'#fff':'#000'}; font-weight:700;">
+        ${nick} ${isWin?'(당첨!)':''}
+      </div>`;
+  });
+}
+
+async function toggleWinner(nick) {
+  const ref = db.ref(`events/${selectedEventId}/winners/${nick}`);
+  const snap = await ref.once('value');
+  
+  if(snap.exists()) {
+    await ref.remove(); // 당첨 취소
+  } else {
+    await ref.set({nick: nick, alerted: false}); // 당첨 등록
+  }
+  loadParticipants(selectedEventId);
+}
 </script>
-</body>
-</html>
