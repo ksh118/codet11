@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codet 관리자 패널</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+<style>
+:root {
+  --bg: #F2F4F6;
+  --surface: #FFFFFF;
+  --border: #E5E8EB;
+  --text: #191F28;
+  --text2: #4E5968;
+  --text3: #8B95A1;
+  --accent: #3182F6;
+  --accent-hover: #1B64DA;
+  --danger: #F04452;
+  --r-xl: 24px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;height:60px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;box-shadow: 0 1px 2px rgba(0,0,0,0.03);}
+.logo{font-size:20px;font-weight:900;color:var(--accent);letter-spacing:-1px;}
+.logo span{color:var(--text);}
+
+/* MAIN CONTENT */
+.admin-container{max-width:1200px;margin:0 auto;padding:32px 20px;}
+.card{background:var(--surface);padding:32px;border-radius:var(--r-xl);box-shadow:0 8px 24px rgba(0,0,0,0.05);margin-bottom:32px;}
+.section-title{font-size:22px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+
+/* FORM */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--text3);margin-bottom:6px;}
+.field input, .field textarea{width:100%;padding:12px;border:1.5px solid var(--border);border-radius:10px;outline:none;font-size:15px;font-family:inherit;}
+.field input:focus{border-color:var(--accent);}
+
+/* BUTTONS */
+.btn{padding:12px 24px;border-radius:12px;border:none;font-weight:700;cursor:pointer;transition:0.2s;font-size:15px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent-hover);}
+.btn-danger{background:#FFF2F3;color:var(--danger);}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;margin-top:20px;}
+.data-table th{background:#F9FAFB;padding:14px;text-align:left;font-size:12px;color:var(--text3);border-bottom:1px solid var(--border);}
+.data-table td{padding:16px 14px;border-bottom:1px solid var(--border);font-size:14px;}
+.data-table tr:hover{background:#F9FAFB;}
+
+#login-screen{display:flex;min-height:90vh;align-items:center;justify-content:center;}
+#admin-screen{display:none;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">codet<span>관리자</span></div>
+</div>
+
+<div id="login-screen">
+  <div class="card" style="width:100%; max-width:400px;">
+    <div class="section-title">🔒 관리자 인증</div>
+    <div class="field">
+      <label>관리자 비밀번호</label>
+      <input type="password" id="admin-pw" placeholder="비밀번호 입력">
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="checkAuth()">인증하기</button>
+  </div>
+</div>
+
+<div id="admin-screen" class="admin-container">
+  
+  <div class="card">
+    <div class="section-title">📢 공지사항 등록</div>
+    <div class="field">
+      <label>제목</label>
+      <input type="text" id="notice-title" placeholder="공지 제목">
+    </div>
+    <div class="field">
+      <label>내용</label>
+      <textarea id="notice-content" style="height:100px;" placeholder="공지 상세 내용"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="uploadNotice()">공지 등록</button>
+  </div>
+
+  <div class="card">
+    <div class="section-title">🎪 신규 이벤트 등록</div>
+    <div class="grid">
+      <div class="field">
+        <label>이벤트 제목</label>
+        <input type="text" id="ev-title">
+      </div>
+      <div class="field">
+        <label>쿠폰 이름</label>
+        <input type="text" id="ev-coupon-name">
+      </div>
+      <div class="field">
+        <label>쿠폰 이미지 URL</label>
+        <input type="text" id="ev-img" placeholder="https://...">
+      </div>
+      <div class="field">
+        <label>시작 일시</label>
+        <input type="datetime-local" id="ev-start">
+      </div>
+      <div class="field">
+        <label>종료 일시</label>
+        <input type="datetime-local" id="ev-end">
+      </div>
+      <div class="field" style="grid-column: span 2;">
+        <label>상세 설명</label>
+        <textarea id="ev-desc" style="height:80px;"></textarea>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addEvent()">이벤트 생성</button>
+  </div>
+
+  <div class="card">
+    <div class="section-title">👥 전체 참여자 명단</div>
+    <table class="data-table">
+      <thead>
+        <tr><th>참여자</th><th>디스코드</th><th>이벤트</th><th>시간</th><th>관리</th></tr>
+      </thead>
+      <tbody id="part-list"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// Firebase 설정
+firebase.initializeApp({
+  apiKey:"AIzaSyDIl0-jomcfA8ykz-nYK_rYaLb-IE_yICc",
+  authDomain:"codet-597c7.firebaseapp.com",
+  databaseURL:"https://codet-597c7-default-rtdb.firebaseio.com",
+  projectId:"codet-597c7",
+  storageBucket:"codet-597c7.firebasestorage.app",
+  messagingSenderId:"619578457920",
+  appId:"1:619578457920:web:52d98e7430f9b9820104a5"
+});
+const db = firebase.database();
+
+// 관리자 비밀번호 체크 (임시로 1234 설정)
+function checkAuth() {
+  const pw = document.getElementById('admin-pw').value;
+  if(pw === '1234') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    loadData();
+  } else {
+    alert('비밀번호가 올바르지 않습니다.');
+  }
+}
+
+// 공지사항 업로드
+async function uploadNotice() {
+  const title = document.getElementById('notice-title').value;
+  const content = document.getElementById('notice-content').value;
+  if(!title || !content) return alert('내용을 입력하세요.');
+
+  await db.ref('event_notices').push({
+    title, content, createdAt: Date.now()
+  });
+  alert('공지가 등록되었습니다.');
+  document.getElementById('notice-title').value = '';
+  document.getElementById('notice-content').value = '';
+}
+
+// 이벤트 등록
+async function addEvent() {
+  const title = document.getElementById('ev-title').value;
+  const couponName = document.getElementById('ev-coupon-name').value;
+  const img = document.getElementById('ev-img').value;
+  const start = document.getElementById('ev-start').value;
+  const end = document.getElementById('ev-end').value;
+  const desc = document.getElementById('ev-desc').value;
+
+  if(!title) return alert('제목은 필수입니다.');
+
+  const id = Date.now();
+  await db.ref('events/'+id).set({
+    title, couponName, img, start, end, desc, createdAt: id
+  });
+  alert('이벤트가 성공적으로 생성되었습니다.');
+}
+
+// 참여자 데이터 로드
+function loadData() {
+  db.ref('participants').on('value', snap => {
+    const list = document.getElementById('part-list');
+    list.innerHTML = '';
+    snap.forEach(eventGroup => {
+      eventGroup.forEach(p => {
+        const user = p.val();
+        list.innerHTML += `
+          <tr>
+            <td><b>${user.nick}</b></td>
+            <td>${user.discord}</td>
+            <td>${user.eventTitle}</td>
+            <td style="color:var(--text3)">${new Date(user.time).toLocaleString()}</td>
+            <td><button class="btn btn-danger" style="padding:6px 12px; font-size:12px;" onclick="deletePart('${eventGroup.key}', '${p.key}')">삭제</button></td>
+          </tr>
+        `;
+      });
+    });
+  });
+}
+
+// 참여자 기록 삭제
+async function deletePart(evId, userId) {
+  if(confirm('이 기록을 명단에서 삭제할까요?')) {
+    await db.ref(`participants/${evId}/${userId}`).remove();
+  }
+}
+</script>
+</body>
+</html>
