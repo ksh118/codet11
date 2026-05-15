@@ -7,25 +7,76 @@
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-storage-compat.js"></script>
 <style>
-  :root { --accent: #3182f6; --bg: #f2f4f6; }
-  body { font-family: sans-serif; background: var(--bg); padding: 40px; display: flex; gap: 30px; margin: 0; }
-  .sidebar { width: 240px; position: sticky; top: 40px; height: fit-content; }
-  .tab-btn { width: 100%; padding: 16px; text-align: left; border: none; background: #fff; margin-bottom: 8px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-  .tab-btn.active { background: var(--accent); color: #fff; }
-  .content { flex: 1; background: #fff; padding: 40px; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-  .card { display: none; }
-  .card.active { display: block; }
-  input, textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; outline: none; }
-  .main-btn { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
-  .list-item { padding: 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-  .user-badge { padding: 8px 16px; border-radius: 20px; cursor: pointer; background: #eee; font-size: 13px; font-weight: 700; transition: 0.2s; }
-  .user-badge.win { background: var(--accent); color: #fff; }
+:root { --accent: #3182f6; --bg: #f2f4f6; --border: #E5E8EB; --text: #191F28; --text2: #4E5968; --text3: #8B95A1; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+body { background: var(--bg); padding: 40px; display: flex; gap: 30px; min-height: 100vh; }
+.sidebar { width: 220px; position: sticky; top: 40px; height: fit-content; }
+.sidebar h2 { color: var(--accent); margin-bottom: 24px; font-size: 20px; }
+.tab-btn { width: 100%; padding: 14px 16px; text-align: left; border: none; background: #fff; margin-bottom: 8px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 14px; color: var(--text2); }
+.tab-btn.active { background: var(--accent); color: #fff; }
+.tab-btn:hover:not(.active) { background: #e8efff; }
+.content { flex: 1; min-width: 0; }
+.card { display: none; background: #fff; padding: 36px; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+.card.active { display: block; }
+h3 { font-size: 20px; font-weight: 900; margin-bottom: 24px; color: var(--text); }
+h4 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+input, textarea, select { width: 100%; padding: 12px 14px; margin-bottom: 14px; border: 1px solid var(--border); border-radius: 10px; outline: none; font-size: 14px; transition: 0.2s; background: #fafafa; }
+input:focus, textarea:focus, select:focus { border-color: var(--accent); background: #fff; }
+.main-btn { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 15px; transition: 0.2s; }
+.main-btn:hover { background: #1d6fe0; }
+.main-btn:disabled { background: #ccc; cursor: not-allowed; }
+.list-item { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.list-item:last-child { border-bottom: none; }
+.list-item span { font-size: 14px; font-weight: 600; flex: 1; }
+.list-wrap { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-top: 8px; background: #fff; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.badge-ongoing { background: #E8F4FF; color: var(--accent); }
+.badge-ended { background: #eee; color: var(--text3); }
+
+/* Event item */
+.ev-item { padding: 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.15s; }
+.ev-item:last-child { border-bottom: none; }
+.ev-item:hover { background: #f0f6ff; }
+.ev-item.selected { background: #E8F4FF; }
+.ev-item-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.ev-item-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.action-btn { padding: 6px 12px; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.15s; }
+.btn-end { background: #FFF3E0; color: #E65100; }
+.btn-end:hover { background: #FFE0B2; }
+.btn-restore { background: #E8F5E9; color: #2E7D32; }
+.btn-restore:hover { background: #C8E6C9; }
+.btn-delete { background: #FFEBEE; color: #C62828; }
+.btn-delete:hover { background: #FFCDD2; }
+.btn-edit { background: #E3F2FD; color: #1565C0; }
+.btn-edit:hover { background: #BBDEFB; }
+
+/* Participant & Winner UI */
+.part-box { margin-top: 24px; background: #f9fafb; padding: 24px; border-radius: 16px; border: 1px solid var(--border); }
+.winner-announce-box { background: linear-gradient(135deg, #FFF9E5, #FFFDE7); border: 2px solid #FFD700; border-radius: 14px; padding: 16px 20px; margin-bottom: 18px; }
+.winner-announce-title { font-weight: 900; font-size: 15px; margin-bottom: 10px; }
+.winner-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.winner-chip { background: #FFD700; color: #000; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+.winner-chip button { border: none; background: none; cursor: pointer; font-size: 14px; font-weight: 900; color: rgba(0,0,0,0.5); padding: 0; }
+.winner-chip button:hover { color: #c62828; }
+
+.user-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.user-badge { padding: 8px 16px; border-radius: 20px; cursor: pointer; background: #eee; font-size: 13px; font-weight: 700; transition: 0.2s; border: 2px solid transparent; color: var(--text2); }
+.user-badge:hover { background: #E3F2FD; border-color: var(--accent); }
+.user-badge.win { background: #FFD700; color: #000; border-color: #FFC107; }
+
+/* Edit form */
+.edit-section { margin-top: 32px; background: #F0F6FF; padding: 24px; border-radius: 16px; border: 1px solid #BDD8FF; display: none; }
+.edit-section.show { display: block; }
+.edit-section h4 { color: var(--accent); margin-bottom: 16px; }
+
+/* Upload progress */
+.upload-status { font-size: 13px; color: var(--text3); margin-top: -10px; margin-bottom: 14px; min-height: 18px; }
 </style>
 </head>
 <body>
 
 <div class="sidebar">
-  <h2 style="color:var(--accent); margin-bottom:30px; font-weight: 900;">MACO Admin</h2>
+  <h2>MACO Admin</h2>
   <button class="tab-btn active" onclick="showTab('tab-ev', this)">🎪 이벤트 & 당첨자</button>
   <button class="tab-btn" onclick="showTab('tab-cp', this)">🎁 상품(쿠폰) 관리</button>
   <button class="tab-btn" onclick="showTab('tab-sv', this)">🎮 서버 홍보 관리</button>
@@ -33,44 +84,94 @@
 </div>
 
 <div class="content">
+
+  <!-- 이벤트 탭 -->
   <div id="tab-ev" class="card active">
-    <h3>이벤트 등록</h3>
+    <h3>🎪 이벤트 등록</h3>
     <input type="text" id="e-title" placeholder="이벤트 제목">
-    <label style="font-size:12px; color:#888;">배너 이미지 업로드</label>
-    <input type="file" id="e-file">
-    <textarea id="e-desc" placeholder="상세 내용" rows="4"></textarea>
-    <select id="e-coupon-select"></select>
-    <button class="main-btn" onclick="saveEvent()">이벤트 저장 및 게시</button>
-    
-    <div id="admin-ev-list" style="margin-top:40px;"><h4>이벤트 목록</h4></div>
-    <div id="part-box" style="margin-top:30px; display:none; background:#f9fafb; padding:25px; border-radius:15px; border:1px solid #eee;">
-        <h4>참여자 명단 (클릭하여 당첨자 선정)</h4>
-        <div id="user-list" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:15px;"></div>
+    <label style="font-size:12px; color:var(--text3); margin-bottom:6px; display:block;">배너 이미지 업로드</label>
+    <input type="file" id="e-file" accept="image/*" onchange="previewUpload()">
+    <div class="upload-status" id="upload-status"></div>
+    <img id="img-preview" style="display:none; width:100%; border-radius:10px; margin-bottom:14px; max-height:180px; object-fit:cover;">
+    <textarea id="e-desc" placeholder="상세 내용 (이벤트 참여 방법, 기간 등)" rows="4"></textarea>
+    <select id="e-coupon-select"><option value="">지급할 상품 선택</option></select>
+    <button class="main-btn" id="save-ev-btn" onclick="saveEvent()">이벤트 저장 및 게시</button>
+
+    <div style="margin-top: 40px;">
+      <h4>이벤트 목록</h4>
+      <div id="admin-ev-list" class="list-wrap"></div>
+    </div>
+
+    <!-- 당첨자 선정 -->
+    <div class="part-box" id="part-box" style="display:none;">
+      <h4>선택된 이벤트: <span id="selected-ev-title" style="color:var(--accent)"></span></h4>
+
+      <!-- 당첨자 박스 -->
+      <div class="winner-announce-box" id="winner-announce-box">
+        <div class="winner-announce-title">🏆 현재 당첨자</div>
+        <div class="winner-chips" id="winner-chips-box">
+          <span style="color:var(--text3); font-size:13px;">아직 당첨자가 없습니다</span>
+        </div>
+      </div>
+
+      <!-- 참여자 목록 -->
+      <div>
+        <b style="font-size:14px; color:var(--text2);">참여자 목록 (클릭하여 당첨 토글)</b>
+        <div class="user-badges" id="user-list">
+          <span style="color:var(--text3); font-size:13px;">로딩중...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 이벤트 수정 폼 -->
+    <div class="edit-section" id="edit-section">
+      <h4>✏️ 이벤트 수정</h4>
+      <input type="hidden" id="edit-id">
+      <input type="text" id="edit-title" placeholder="이벤트 제목">
+      <textarea id="edit-desc" placeholder="상세 내용" rows="3"></textarea>
+      <select id="edit-coupon-select"><option value="">상품 선택</option></select>
+      <div style="display:flex; gap:10px;">
+        <button class="main-btn" onclick="updateEvent()" style="background:#1565C0;">수정 저장</button>
+        <button class="main-btn" onclick="closeEdit()" style="background:#eee; color:var(--text2);">취소</button>
+      </div>
     </div>
   </div>
 
+  <!-- 쿠폰 탭 -->
   <div id="tab-cp" class="card">
-    <h3>상품(쿠폰) 데이터 등록</h3>
+    <h3>🎁 상품(쿠폰) 관리</h3>
     <input type="text" id="c-name" placeholder="상품 이름 (예: 다이아몬드 64개)">
     <button class="main-btn" onclick="saveCoupon()">상품 추가</button>
-    <div id="admin-cp-list" style="margin-top:20px;"></div>
+    <div style="margin-top:24px;">
+      <h4>상품 목록</h4>
+      <div id="admin-cp-list" class="list-wrap"></div>
+    </div>
   </div>
 
+  <!-- 서버 탭 -->
   <div id="tab-sv" class="card">
-    <h3>서버 목록 등록</h3>
+    <h3>🎮 서버 홍보 관리</h3>
     <input type="text" id="s-name" placeholder="서버 이름">
     <input type="text" id="s-author" placeholder="제작자">
     <button class="main-btn" onclick="saveServer()">서버 추가</button>
-    <div id="admin-sv-list" style="margin-top:20px;"></div>
+    <div style="margin-top:24px;">
+      <h4>서버 목록</h4>
+      <div id="admin-sv-list" class="list-wrap"></div>
+    </div>
   </div>
 
+  <!-- 공지 탭 -->
   <div id="tab-nt" class="card">
-    <h3>공지사항 등록</h3>
+    <h3>📢 공지사항 관리</h3>
     <input type="text" id="n-title" placeholder="공지 제목">
-    <textarea id="n-content" placeholder="공지 상세 내용"></textarea>
+    <textarea id="n-content" placeholder="공지 상세 내용" rows="4"></textarea>
     <button class="main-btn" onclick="saveNotice()">공지 게시</button>
-    <div id="admin-nt-list" style="margin-top:20px;"></div>
+    <div style="margin-top:24px;">
+      <h4>공지 목록 (최신순)</h4>
+      <div id="admin-nt-list" class="list-wrap"></div>
+    </div>
   </div>
+
 </div>
 
 <script>
@@ -86,6 +187,7 @@ firebase.initializeApp({
 const db = firebase.database();
 const storage = firebase.storage();
 let selectedEv = null;
+let selectedEvTitle = '';
 
 function showTab(id, btn) {
   document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
@@ -94,113 +196,289 @@ function showTab(id, btn) {
   btn.classList.add('active');
 }
 
-// 공지사항 등록
+/* ─── 이미지 미리보기 ─── */
+function previewUpload() {
+  const file = document.getElementById('e-file').files[0];
+  if(!file) return;
+  const preview = document.getElementById('img-preview');
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+  document.getElementById('upload-status').innerText = `선택됨: ${file.name}`;
+}
+
+/* ─── 공지 ─── */
 async function saveNotice() {
-  const title = document.getElementById('n-title').value;
-  const content = document.getElementById('n-content').value;
+  const title = document.getElementById('n-title').value.trim();
+  const content = document.getElementById('n-content').value.trim();
+  if(!title || !content) return alert('제목과 내용을 모두 입력해주세요.');
   await db.ref('notices').push({title, content, time: Date.now()});
+  document.getElementById('n-title').value = '';
+  document.getElementById('n-content').value = '';
   alert('공지가 게시되었습니다.');
 }
 
-// 서버 등록
+/* ─── 서버 ─── */
 async function saveServer() {
-  const name = document.getElementById('s-name').value;
-  const author = document.getElementById('s-author').value;
+  const name = document.getElementById('s-name').value.trim();
+  const author = document.getElementById('s-author').value.trim();
+  if(!name || !author) return alert('서버 이름과 제작자를 모두 입력해주세요.');
   await db.ref('servers').push({name, author});
+  document.getElementById('s-name').value = '';
+  document.getElementById('s-author').value = '';
   alert('서버가 등록되었습니다.');
 }
 
-// 상품(쿠폰) 등록
+/* ─── 상품 ─── */
 async function saveCoupon() {
-  const name = document.getElementById('c-name').value;
+  const name = document.getElementById('c-name').value.trim();
+  if(!name) return alert('상품 이름을 입력해주세요.');
   await db.ref('coupons').push({name});
+  document.getElementById('c-name').value = '';
   alert('상품이 추가되었습니다.');
 }
 
-// 이벤트 저장 (이미지 업로드 포함)
+/* ─── 이벤트 등록 ─── */
 async function saveEvent() {
+  const title = document.getElementById('e-title').value.trim();
+  const desc = document.getElementById('e-desc').value.trim();
+  const couponName = document.getElementById('e-coupon-select').value;
+  if(!title) return alert('이벤트 제목을 입력해주세요.');
   const file = document.getElementById('e-file').files[0];
-  const title = document.getElementById('e-title').value;
+  const btn = document.getElementById('save-ev-btn');
+  btn.disabled = true;
+  btn.innerText = '저장 중...';
   let url = "";
-  if(file) {
-    alert('이미지를 업로드 중입니다. 잠시만 기다려주세요...');
-    const ref = storage.ref('events/'+Date.now()+'_'+file.name);
-    await ref.put(file);
-    url = await ref.getDownloadURL();
+  try {
+    if(file) {
+      document.getElementById('upload-status').innerText = '이미지 업로드 중...';
+      const ref = storage.ref('events/' + Date.now() + '_' + file.name);
+      await ref.put(file);
+      url = await ref.getDownloadURL();
+    }
+    await db.ref('events/' + Date.now()).set({
+      title, img: url, desc, couponName, status: 'ongoing', createdAt: Date.now()
+    });
+    alert('이벤트가 게시되었습니다.');
+    document.getElementById('e-title').value = '';
+    document.getElementById('e-desc').value = '';
+    document.getElementById('e-file').value = '';
+    document.getElementById('img-preview').style.display = 'none';
+    document.getElementById('upload-status').innerText = '';
+  } catch(err) {
+    alert('오류 발생: ' + err.message);
   }
-  await db.ref('events/'+Date.now()).set({
-    title: title,
-    img: url, desc: document.getElementById('e-desc').value,
-    couponName: document.getElementById('e-coupon-select').value,
-    status: 'ongoing'
-  });
-  alert('이벤트가 성공적으로 게시되었습니다.');
-  location.reload();
+  btn.disabled = false;
+  btn.innerText = '이벤트 저장 및 게시';
 }
 
-// 실시간 목록 업데이트들
+/* ─── 이벤트 수정 ─── */
+function openEdit(id, ev) {
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-title').value = ev.title;
+  document.getElementById('edit-desc').value = ev.desc || '';
+  const sel = document.getElementById('edit-coupon-select');
+  sel.innerHTML = '<option value="">상품 선택</option>';
+  // 현재 쿠폰 목록 채우기
+  db.ref('coupons').once('value').then(snap => {
+    snap.forEach(c => {
+      sel.innerHTML += `<option ${ev.couponName === c.val().name ? 'selected' : ''}>${c.val().name}</option>`;
+    });
+  });
+  document.getElementById('edit-section').classList.add('show');
+  document.getElementById('edit-section').scrollIntoView({behavior:'smooth'});
+}
+
+function closeEdit() {
+  document.getElementById('edit-section').classList.remove('show');
+}
+
+async function updateEvent() {
+  const id = document.getElementById('edit-id').value;
+  const title = document.getElementById('edit-title').value.trim();
+  const desc = document.getElementById('edit-desc').value.trim();
+  const couponName = document.getElementById('edit-coupon-select').value;
+  if(!title) return alert('제목을 입력해주세요.');
+  await db.ref('events/'+id).update({title, desc, couponName});
+  alert('수정되었습니다.');
+  closeEdit();
+}
+
+/* ─── 이벤트 목록 실시간 ─── */
 db.ref('events').on('value', snap => {
   const list = document.getElementById('admin-ev-list');
-  list.innerHTML = '<h4>목록 (참여자 확인은 클릭)</h4>';
+  list.innerHTML = '';
+  let count = 0;
   snap.forEach(e => {
-    list.innerHTML += `<div class="list-item" onclick="loadParts('${e.key}')" style="cursor:pointer; background:#fff; margin-bottom:5px; border-radius:8px;">
-      <span>${e.val().title} (${e.val().status})</span>
-      <div>
-        <button onclick="db.ref('events/${e.key}').update({status:'ended'})">종료</button>
-        <button onclick="db.ref('events/${e.key}').remove()" style="color:red">삭제</button>
+    const ev = e.val();
+    const isEnd = ev.status === 'ended';
+    const badge = isEnd
+      ? '<span class="badge badge-ended">종료</span>'
+      : '<span class="badge badge-ongoing">진행중</span>';
+    const div = document.createElement('div');
+    div.className = 'ev-item' + (selectedEv === e.key ? ' selected' : '');
+    div.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="ev-item-title">${ev.title}</span>${badge}
       </div>
-    </div>`;
+      <div class="ev-item-actions" onclick="event.stopPropagation()">
+        <button class="action-btn btn-edit" onclick="openEdit('${e.key}', ${JSON.stringify(ev).replace(/"/g,"&quot;")})">✏️ 수정</button>
+        ${isEnd
+          ? `<button class="action-btn btn-restore" onclick="changeStatus('${e.key}','ongoing')">▶ 재개</button>`
+          : `<button class="action-btn btn-end" onclick="changeStatus('${e.key}','ended')">⏹ 종료</button>`
+        }
+        <button class="action-btn btn-delete" onclick="deleteEvent('${e.key}')">🗑 삭제</button>
+      </div>
+    `;
+    div.onclick = () => loadParts(e.key, ev.title);
+    list.appendChild(div);
+    count++;
   });
+  if(!count) list.innerHTML = '<div style="padding:20px; color:var(--text3); text-align:center; font-size:14px;">등록된 이벤트가 없습니다</div>';
 });
 
-async function loadParts(id) {
+function changeStatus(id, status) {
+  const msg = status === 'ended' ? '이 이벤트를 종료하시겠습니까?' : '이 이벤트를 다시 진행 중으로 변경하시겠습니까?';
+  if(!confirm(msg)) return;
+  db.ref('events/'+id).update({status});
+}
+
+function deleteEvent(id) {
+  if(!confirm('이벤트를 삭제하면 참여자 데이터도 함께 삭제됩니다. 계속하시겠습니까?')) return;
+  db.ref('events/'+id).remove();
+  db.ref('participants/'+id).remove();
+  if(selectedEv === id) {
+    selectedEv = null;
+    document.getElementById('part-box').style.display = 'none';
+  }
+}
+
+/* ─── 참여자 & 당첨자 ─── */
+async function loadParts(id, title) {
   selectedEv = id;
-  const pSnap = await db.ref('participants/'+id).once('value');
-  const eSnap = await db.ref('events/'+id).once('value');
-  const winners = eSnap.val().winners || {};
+  selectedEvTitle = title;
+  document.querySelectorAll('.ev-item').forEach(el => el.classList.remove('selected'));
+  event.currentTarget && event.currentTarget.classList && event.currentTarget.classList.add('selected');
+
+  document.getElementById('selected-ev-title').innerText = title;
   document.getElementById('part-box').style.display = 'block';
+  document.getElementById('user-list').innerHTML = '<span style="color:var(--text3);font-size:13px;">불러오는 중...</span>';
+
+  const [pSnap, eSnap] = await Promise.all([
+    db.ref('participants/'+id).once('value'),
+    db.ref('events/'+id).once('value')
+  ]);
+  const winners = eSnap.val().winners || {};
+  renderParticipants(pSnap, winners);
+  renderWinners(winners);
+
+  document.getElementById('part-box').scrollIntoView({behavior:'smooth'});
+}
+
+function renderWinners(winners) {
+  const box = document.getElementById('winner-chips-box');
+  const keys = Object.keys(winners);
+  if(!keys.length) {
+    box.innerHTML = '<span style="color:var(--text3);font-size:13px;">아직 당첨자가 없습니다</span>';
+    return;
+  }
+  box.innerHTML = keys.map(nick => `
+    <div class="winner-chip">
+      🏆 ${nick}
+      <button onclick="toggleWin('${nick}')" title="당첨 취소">✕</button>
+    </div>
+  `).join('');
+}
+
+function renderParticipants(pSnap, winners) {
   const box = document.getElementById('user-list');
-  box.innerHTML = '';
-  if(!pSnap.exists()) box.innerHTML = '참여자가 없습니다.';
+  if(!pSnap.exists()) {
+    box.innerHTML = '<span style="color:var(--text3);font-size:13px;">참여자가 없습니다</span>';
+    return;
+  }
+  let html = '';
   pSnap.forEach(p => {
     const nick = p.val().nick;
-    const isWin = winners[nick];
-    box.innerHTML += `<div class="user-badge ${isWin?'win':''}" onclick="toggleWin('${nick}')">${nick} ${isWin?'(당첨)':''}</div>`;
+    const isWin = !!winners[nick];
+    html += `<div class="user-badge ${isWin?'win':''}" onclick="toggleWin('${nick}')">${isWin?'🏆 ':''}${nick}</div>`;
   });
+  box.innerHTML = html;
 }
 
 async function toggleWin(nick) {
+  if(!selectedEv) return;
   const ref = db.ref(`events/${selectedEv}/winners/${nick}`);
   const snap = await ref.once('value');
-  if(snap.exists()) await ref.remove(); 
-  else await ref.set({nick: nick, alerted: false});
-  loadParts(selectedEv);
+  if(snap.exists()) {
+    await ref.remove();
+  } else {
+    await ref.set({nick, alerted: false, time: Date.now()});
+  }
+  // 새로고침
+  const [pSnap, eSnap] = await Promise.all([
+    db.ref('participants/'+selectedEv).once('value'),
+    db.ref('events/'+selectedEv).once('value')
+  ]);
+  const winners = eSnap.val().winners || {};
+  renderParticipants(pSnap, winners);
+  renderWinners(winners);
 }
 
+/* ─── 쿠폰 목록 실시간 ─── */
 db.ref('coupons').on('value', snap => {
   const sel = document.getElementById('e-coupon-select');
   const list = document.getElementById('admin-cp-list');
   sel.innerHTML = '<option value="">지급할 상품 선택</option>';
-  list.innerHTML = '<h4>상품 목록</h4>';
-  snap.forEach(c => { 
-    sel.innerHTML += `<option>${c.val().name}</option>`;
-    list.innerHTML += `<div class="list-item"><span>${c.val().name}</span><button onclick="db.ref('coupons/${c.key}').remove()">삭제</button></div>`;
+  list.innerHTML = '';
+  let count = 0;
+  snap.forEach(c => {
+    sel.innerHTML += `<option value="${c.val().name}">${c.val().name}</option>`;
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    div.innerHTML = `<span>${c.val().name}</span><button class="action-btn btn-delete" onclick="db.ref('coupons/${c.key}').remove()">삭제</button>`;
+    list.appendChild(div);
+    count++;
   });
+  if(!count) list.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center;font-size:14px;">등록된 상품이 없습니다</div>';
 });
 
+/* ─── 서버 목록 실시간 ─── */
 db.ref('servers').on('value', snap => {
   const list = document.getElementById('admin-sv-list');
-  list.innerHTML = '<h4>서버 목록</h4>';
+  list.innerHTML = '';
+  let count = 0;
   snap.forEach(s => {
-    list.innerHTML += `<div class="list-item"><span>${s.val().name} (${s.val().author})</span><button onclick="db.ref('servers/${s.key}').remove()">삭제</button></div>`;
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    div.innerHTML = `<span>${s.val().name} <small style="color:var(--text3);">(${s.val().author})</small></span><button class="action-btn btn-delete" onclick="db.ref('servers/${s.key}').remove()">삭제</button>`;
+    list.appendChild(div);
+    count++;
   });
+  if(!count) list.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center;font-size:14px;">등록된 서버가 없습니다</div>';
 });
 
-db.ref('notices').on('value', snap => {
+/* ─── 공지 목록 실시간 ─── */
+db.ref('notices').orderByChild('time').on('value', snap => {
   const list = document.getElementById('admin-nt-list');
-  list.innerHTML = '<h4>공지 목록</h4>';
-  snap.forEach(n => {
-    list.innerHTML += `<div class="list-item"><span>${n.val().title}</span><button onclick="db.ref('notices/${n.key}').remove()">삭제</button></div>`;
+  list.innerHTML = '';
+  const items = [];
+  snap.forEach(n => items.unshift({key: n.key, val: n.val()})); // 최신순
+  if(!items.length) {
+    list.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center;font-size:14px;">등록된 공지가 없습니다</div>';
+    return;
+  }
+  items.forEach(({key, val}) => {
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    div.style.flexDirection = 'column';
+    div.style.alignItems = 'flex-start';
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+        <span style="font-weight:700;">${val.title}</span>
+        <button class="action-btn btn-delete" onclick="db.ref('notices/${key}').remove()">삭제</button>
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-top:4px;white-space:pre-wrap;">${val.content}</p>
+    `;
+    list.appendChild(div);
   });
 });
 </script>
