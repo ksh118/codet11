@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>codet 이벤트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+<style>
+:root {
+  --bg: #F2F4F6;
+  --surface: #FFFFFF;
+  --surface2: #F9FAFB;
+  --border: #E5E8EB;
+  --text: #191F28;
+  --text2: #4E5968;
+  --text3: #8B95A1;
+  --text4: #B0B8C1;
+  --accent: #3182F6;
+  --accent-hover: #1B64DA;
+  --accent-light: #EBF3FE;
+  --accent-glow: rgba(49,130,246,0.18);
+  --danger: #F04452;
+  --success: #00B493;
+  --warning: #FF8A00;
+  --r: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+  --shadow-sm: 0 1px 4px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased;}
+body{overflow-x:hidden;}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ─── TOPBAR ─── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  height:56px;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:14px;
+  box-shadow:var(--shadow-sm);
+}
+.tb-logo{font-size:18px;font-weight:900;letter-spacing:-1px;color:var(--accent);}
+.tb-logo span{color:var(--text);}
+.tb-sep{width:1px;height:16px;background:var(--border);}
+.tb-title{font-size:13px;color:var(--text3);font-weight:500;}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.user-chip{
+  font-size:12px;font-weight:700;color:var(--text2);
+  background:var(--bg);border:1.5px solid var(--border);
+  border-radius:20px;padding:5px 14px;white-space:nowrap;
+}
+.btn-sm{
+  padding:7px 14px;border-radius:var(--r);border:none;
+  font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;
+  transition:all .15s;
+}
+.btn-logout{background:var(--bg);color:var(--text3);border:1.5px solid var(--border);}
+.btn-logout:hover{color:var(--danger);border-color:var(--danger);background:#FFF2F3;}
+.btn-login-top{background:var(--accent);color:#fff;}
+.btn-login-top:hover{background:var(--accent-hover);}
+
+/* ─── SCREENS ─── */
+#auth-screen{display:flex;min-height:calc(100vh - 56px);align-items:center;justify-content:center;padding:40px 24px;}
+#main-screen{display:none;min-height:calc(100vh - 56px);padding:32px 24px;max-width:1100px;margin:0 auto;}
+
+/* ─── AUTH CARD ─── */
+.auth-wrap{width:100%;max-width:380px;animation:slideUp .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+.auth-logo{text-align:center;margin-bottom:32px;}
+.auth-logo h1{font-size:28px;font-weight:900;letter-spacing:-1.5px;color:var(--accent);}
+.auth-logo h1 span{color:var(--text);}
+.auth-logo p{font-size:13px;color:var(--text3);margin-top:6px;}
+.auth-card{background:var(--surface);border-radius:var(--r-xl);padding:28px 24px;box-shadow:var(--shadow-md);border:1px solid var(--border);}
+.card-title{font-size:17px;font-weight:800;margin-bottom:20px;letter-spacing:-.5px;}
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--bg);padding:4px;border-radius:var(--r);}
+.tab-btn{flex:1;padding:8px;border:none;background:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--text3);transition:all .2s;}
+.tab-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow-sm);}
+.field{margin-bottom:13px;}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;letter-spacing:.3px;text-transform:uppercase;}
+.field input{
+  width:100%;padding:12px 14px;
+  border:1.5px solid var(--border);border-radius:var(--r);
+  font-size:14px;font-family:inherit;color:var(--text);
+  background:var(--bg);outline:none;font-weight:500;
+  transition:border-color .2s,box-shadow .2s;
+}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);background:var(--surface);}
+.field input::placeholder{color:var(--text4);font-weight:400;}
+.field-hint{font-size:11px;color:var(--text4);margin-top:4px;padding-left:2px;}
+.btn-main{
+  display:block;width:100%;padding:14px;
+  background:var(--accent);color:#fff;border:none;border-radius:var(--r);
+  font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px;
+  transition:background .15s,box-shadow .15s;letter-spacing:-.3px;
+}
+.btn-main:hover{background:var(--accent-hover);box-shadow:0 4px 14px var(--accent-glow);}
+.err{
+  background:#FFF2F3;border:1.5px solid #FFCDD0;
+  border-radius:var(--r);padding:10px 13px;
+  font-size:12px;color:var(--danger);margin-top:10px;
+  display:none;animation:shake .3s ease;
+}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+#reg-form,#log-form{display:none;}
+#reg-form.active,#log-form.active{display:block;}
+
+/* ─── MAIN LAYOUT ─── */
+.section-title{font-size:20px;font-weight:800;letter-spacing:-.8px;margin-bottom:4px;}
+.section-sub{font-size:13px;color:var(--text3);margin-bottom:20px;}
+
+/* ─── NOTICE BANNER ─── */
+.notice-banner{
+  background:linear-gradient(135deg,#FFF9F0,#FFF3E0);
+  border:1.5px solid #FFD88A;border-radius:var(--r-lg);
+  padding:14px 18px;margin-bottom:24px;
+  display:flex;align-items:center;gap:12px;cursor:pointer;
+  transition:box-shadow .2s;
+}
+.notice-banner:hover{box-shadow:var(--shadow-md);}
+.notice-icon{font-size:20px;flex-shrink:0;}
+.notice-text{flex:1;}
+.notice-label{font-size:10px;font-weight:800;color:#FF8A00;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;}
+.notice-title{font-size:13px;font-weight:700;color:#8B5E00;}
+.notice-arr{color:#FFB342;font-size:16px;}
+
+/* ─── EVENT GRID ─── */
+.event-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px;}
+.event-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-xl);overflow:hidden;
+  box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s;
+  cursor:pointer;
+}
+.event-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+.event-card-img{
+  width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  font-size:40px;border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.event-card-img img{width:100%;height:100%;object-fit:cover;}
+.event-badge{
+  position:absolute;top:10px;left:10px;
+  padding:4px 10px;border-radius:20px;
+  font-size:10px;font-weight:800;letter-spacing:.3px;
+}
+.badge-ongoing{background:#00B493;color:#fff;}
+.badge-ended{background:var(--text4);color:#fff;}
+.badge-upcoming{background:var(--warning);color:#fff;}
+.event-body{padding:16px;}
+.event-name{font-size:15px;font-weight:800;letter-spacing:-.4px;margin-bottom:6px;}
+.event-period{font-size:11px;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:4px;}
+.event-coupon-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg);border-radius:var(--r);margin-bottom:10px;}
+.event-coupon-icon{font-size:18px;}
+.event-coupon-name{font-size:12px;font-weight:700;color:var(--accent);}
+.event-participants{font-size:11px;color:var(--text3);}
+.event-participate-btn{
+  width:100%;padding:11px;border:none;border-radius:var(--r);
+  font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;
+  transition:all .15s;
+}
+.ep-active{background:var(--accent);color:#fff;}
+.ep-active:hover{background:var(--accent-hover);box-shadow:0 4px 12px var(--accent-glow);}
+.ep-done{background:var(--success);color:#fff;cursor:default;}
+.ep-ended{background:var(--bg);color:var(--text4);border:1.5px solid var(--border);cursor:default;}
+
+/* ─── MODAL ─── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(14,17,27,.72);
+  display:none;align-items:center;justify-content:center;
+  z-index:200;padding:24px;backdrop-filter:blur(4px);
+  animation:fadeIn .2s ease;
+}
+.modal-overlay.show{display:flex;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal{
+  background:var(--surface);border-radius:var(--r-xl);
+  max-width:480px;width:100%;max-height:85vh;overflow-y:auto;
+  box-shadow:var(--shadow-lg);animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);
+}
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 20px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--surface);z-index:1;
+}
+.modal-title{font-size:16px;font-weight:800;letter-spacing:-.4px;}
+.modal-close{
+  width:32px;height:32px;border-radius:8px;border:none;
+  background:var(--bg);color:var(--text3);cursor:pointer;
+  font-size:16px;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.modal-close:hover{background:var(--border);color:var(--text);}
+.modal-body{padding:20px;}
+.modal-coupon-img{
+  width:100%;aspect-ratio:16/7;object-fit:cover;background:var(--bg);
+  border-radius:var(--r-lg);margin-bottom:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:56px;border:1px solid var(--border);overflow:hidden;
+}
+.modal-coupon-img img{width:100%;height:100%;object-fit:cover;}
+.modal-event-title{font-size:20px;font-weight:900;letter-spacing:-.8px;margin-bottom:8px;}
+.info-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text2);}
+.info-row b{color:var(--text);font-weight:700;}
+.modal-coupon-box{
+  background:linear-gradient(135deg,var(--accent-light),#f0f7ff);
+  border:1.5px solid var(--accent);border-radius:var(--r-lg);
+  padding:14px 16px;margin:14px 0;
+}
+.mcb-label{font-size:10px;font-weight:800;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;}
+.mcb-name{font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.4px;}
+.mcb-desc{font-size:12px;color:var(--text3);margin-top:4px;}
+.modal-participate-btn{
+  width:100%;padding:14px;border:none;border-radius:var(--r);
+  font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;
+  transition:all .15s;margin-top:4px;
+}
+.mp-active{background:var(--accent);color:#fff;}
+.mp-active:hover{background:var(--accent-hover);box-shadow:0 4px 14px var(--accent-glow);}
+.mp-done{background:var(--success);color:#fff;cursor:default;}
+.mp-ended{background:var(--bg);color:var(--text4);border:1.5px solid var(--border);cursor:default;}
+
+/* ─── SUCCESS TOAST ─── */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--text);color:#fff;
+  padding:12px 20px;border-radius:var(--r);
+  font-size:14px;font-weight:600;
+  box-shadow:var(--shadow-lg);z-index:999;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast-disc-note{font-size:12px;color:var(--text3);margin-top:4px;display:none;}
+
+/* ─── PARTICIPANTS ─── */
+.participants-section{margin-top:32px;}
+.part-table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);}
+.part-table th{padding:11px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.part-table td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--border);color:var(--text2);}
+.part-table tr:last-child td{border-bottom:none;}
+.part-table tr:hover td{background:var(--bg);}
+.part-nick{font-weight:700;color:var(--text);}
+.part-discord{color:var(--text3);font-size:12px;}
+.part-date{font-size:11px;color:var(--text4);}
+
+/* ─── NOTICE MODAL ─── */
+.notice-modal-content{font-size:14px;color:var(--text2);line-height:1.8;white-space:pre-wrap;}
+
+/* ─── CHANNEL IO BUTTON ─── */
+#cs-btn{
+  position:fixed;bottom:24px;right:24px;z-index:150;
+  background:var(--accent);color:#fff;
+  width:52px;height:52px;border-radius:50%;border:none;
+  cursor:pointer;font-size:22px;
+  box-shadow:0 4px 20px var(--accent-glow);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .2s,box-shadow .2s;
+}
+#cs-btn:hover{transform:scale(1.1);box-shadow:0 6px 24px rgba(49,130,246,.35);}
+
+/* ─── DISC NOTE ─── */
+.disc-note{
+  margin-top:12px;padding:10px 14px;
+  background:var(--surface2);border-radius:var(--r);
+  font-size:12px;color:var(--text3);line-height:1.7;
+  border-left:3px solid var(--border);
+}
+.disc-note b{color:var(--text2);}
+.disc-note a{color:var(--accent);text-decoration:none;cursor:pointer;font-weight:700;}
+.disc-note a:hover{text-decoration:underline;}
+
+/* ─── LOADING ─── */
+.loading{text-align:center;padding:48px 24px;color:var(--text3);}
+.loading-spin{
+  width:28px;height:28px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .8s linear infinite;margin:0 auto 12px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ─── EMPTY ─── */
+.empty-state{text-align:center;padding:64px 24px;color:var(--text3);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.empty-text{font-size:15px;font-weight:600;margin-bottom:6px;color:var(--text2);}
+.empty-sub{font-size:13px;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <span class="tb-logo">codet<span>마크</span></span>
+  <div class="tb-sep"></div>
+  <span class="tb-title">이벤트 참여</span>
+  <div class="tb-right" id="tb-right">
+    <button class="btn-sm btn-login-top" onclick="showAuthScreen()">로그인</button>
+  </div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-wrap">
+    <div class="auth-logo">
+      <h1>codet<span>마크</span></h1>
+      <p>이벤트 참여를 위해 계정이 필요해요</p>
+    </div>
+    <div class="auth-card">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('reg')">회원가입</button>
+        <button class="tab-btn" onclick="switchTab('log')">로그인</button>
+      </div>
+
+      <!-- 회원가입 -->
+      <div id="reg-form" class="active">
+        <div class="field">
+          <label>마크닉 (마인크래프트 닉네임)</label>
+          <input type="text" id="reg-nick" placeholder="마인크래프트 닉네임" maxlength="20">
+        </div>
+        <div class="field">
+          <label>디스코드 사용자명</label>
+          <input type="text" id="reg-discord" placeholder="예) username (닉네임 아님)" maxlength="32">
+          <div class="field-hint">⚠️ 닉네임이 아닌 사용자명(username)을 입력해주세요</div>
+        </div>
+        <div class="field">
+          <label>비밀번호 (숫자 4~10자리)</label>
+          <input type="password" id="reg-pw" placeholder="숫자만 입력" maxlength="10" inputmode="numeric">
+          <div class="field-hint">숫자만 4~10자리로 설정해주세요</div>
+        </div>
+        <button class="btn-main" onclick="doRegister()">가입하고 이벤트 참여하기 →</button>
+        <div class="err" id="reg-err"></div>
+      </div>
+
+      <!-- 로그인 -->
+      <div id="log-form">
+        <div class="field">
+          <label>마크닉</label>
+          <input type="text" id="log-nick" placeholder="마인크래프트 닉네임">
+        </div>
+        <div class="field">
+          <label>비밀번호</label>
+          <input type="password" id="log-pw" placeholder="숫자 비밀번호" inputmode="numeric">
+        </div>
+        <button class="btn-main" onclick="doLogin()">로그인</button>
+        <div class="err" id="log-err"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN SCREEN -->
+<div id="main-screen">
+  <!-- NOTICE BANNER -->
+  <div class="notice-banner" id="notice-banner" style="display:none" onclick="openNoticeModal()">
+    <span class="notice-icon">📢</span>
+    <div class="notice-text">
+      <div class="notice-label">공지사항</div>
+      <div class="notice-title" id="notice-title-text">불러오는 중...</div>
+    </div>
+    <span class="notice-arr">›</span>
+  </div>
+
+  <!-- EVENTS -->
+  <div class="section-title">진행중인 이벤트</div>
+  <div class="section-sub">쿠폰이 지급되는 이벤트에 참여해보세요</div>
+  <div class="event-grid" id="event-grid">
+    <div class="loading"><div class="loading-spin"></div>이벤트 불러오는 중...</div>
+  </div>
+
+  <!-- PARTICIPANTS -->
+  <div class="participants-section">
+    <div class="section-title">참여자 명단</div>
+    <div class="section-sub">이벤트 참여자 전체 목록</div>
+    <div id="participants-wrap">
+      <div class="loading"><div class="loading-spin"></div>명단 불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
+<!-- EVENT DETAIL MODAL -->
+<div class="modal-overlay" id="event-modal" onclick="closeEventModal(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="em-title">이벤트</span>
+      <button class="modal-close" onclick="closeEventModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-coupon-img" id="em-img">🎫</div>
+      <div class="modal-event-title" id="em-name"></div>
+      <div class="info-row">🕐 <b id="em-period"></b></div>
+      <div class="modal-coupon-box">
+        <div class="mcb-label">🎟️ 쿠폰</div>
+        <div class="mcb-name" id="em-coupon-name"></div>
+        <div class="mcb-desc" id="em-coupon-desc"></div>
+      </div>
+      <div class="info-row" id="em-participants-row">👥 참여자 <b id="em-count">0</b>명</div>
+      <button class="modal-participate-btn mp-active" id="em-btn" onclick="participateEvent()">이벤트 참여하기</button>
+      <div class="disc-note">
+        💬 <b>디스코드로 쿠폰이 안날라온다면?</b><br>
+        <a onclick="openChannelIO()">고객센터에 문의해주세요</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTICE MODAL -->
+<div class="modal-overlay" id="notice-modal" onclick="closeNoticeModal(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">📢 공지사항</span>
+      <button class="modal-close" onclick="closeNoticeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:17px;font-weight:800;margin-bottom:10px;" id="nm-title"></div>
+      <div class="notice-modal-content" id="nm-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- CS BUTTON -->
+<button id="cs-btn" onclick="openChannelIO()" title="고객센터">💬</button>
+
+<script>
+// ─── FIREBASE ───
+firebase.initializeApp({
+  apiKey:"AIzaSyDIl0-jomcfA8ykz-nYK_rYaLb-IE_yICc",
+  authDomain:"codet-597c7.firebaseapp.com",
+  databaseURL:"https://codet-597c7-default-rtdb.firebaseio.com",
+  projectId:"codet-597c7",
+  storageBucket:"codet-597c7.firebasestorage.app",
+  messagingSenderId:"619578457920",
+  appId:"1:619578457920:web:52d98e7430f9b9820104a5"
+});
+const db = firebase.database();
+let currentUser = null;
+let currentEventId = null;
+let eventsData = {};
+
+// ─── CHANNEL IO ───
+(function(){var w=window;if(w.ChannelIO){return;}var ch=function(){ch.c(arguments);};ch.q=[];ch.c=function(args){ch.q.push(args);};w.ChannelIO=ch;function l(){if(w.ChannelIOInitialized){return;}w.ChannelIOInitialized=true;var s=document.createElement("script");s.type="text/javascript";s.async=true;s.src="https://cdn.channel.io/plugin/ch-plugin-web.js";var x=document.getElementsByTagName("script")[0];if(x.parentNode){x.parentNode.insertBefore(s,x);}}if(document.readyState==="complete"){l();}else{w.addEventListener("DOMContentLoaded",l);w.addEventListener("load",l);}})();
+ChannelIO('boot', {"pluginKey":"4a7fa1a4-1a39-4b7d-81df-73a3d878c3dc"});
+
+function openChannelIO(){ ChannelIO('show'); }
+
+// ─── INIT ───
+window.addEventListener('DOMContentLoaded', async () => {
+  const saved = localStorage.getItem('codet_event_user');
+  if(saved){
+    try{
+      const {nick, pw} = JSON.parse(saved);
+      const snap = await db.ref('event_users/'+nick).once('value');
+      if(snap.exists() && snap.val().pw === pw){
+        currentUser = {nick, discord: snap.val().discord};
+        enterMain();
+        return;
+      }
+    } catch(e){}
+    localStorage.removeItem('codet_event_user');
+  }
+  document.getElementById('auth-screen').style.display = 'flex';
+});
+
+// ─── AUTH ───
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active', (tab==='reg'&&i===0)||(tab==='log'&&i===1)));
+  document.getElementById('reg-form').classList.toggle('active', tab==='reg');
+  document.getElementById('log-form').classList.toggle('active', tab==='log');
+}
+
+function showAuthScreen(){
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+}
+
+async function doRegister(){
+  const nick = document.getElementById('reg-nick').value.trim();
+  const discord = document.getElementById('reg-discord').value.trim();
+  const pw = document.getElementById('reg-pw').value.trim();
+  if(!nick) return showErr('reg-err','마크닉을 입력해주세요.');
+  if(!discord) return showErr('reg-err','디스코드 사용자명을 입력해주세요.');
+  if(!/^\d+$/.test(pw)) return showErr('reg-err','비밀번호는 숫자만 입력 가능합니다.');
+  if(pw.length < 4 || pw.length > 10) return showErr('reg-err','비밀번호는 4~10자리 숫자입니다.');
+  try{
+    const snap = await db.ref('event_users/'+nick).once('value');
+    if(snap.exists()) return showErr('reg-err','이미 사용 중인 마크닉입니다.');
+    await db.ref('event_users/'+nick).set({pw, discord, createdAt:Date.now()});
+    localStorage.setItem('codet_event_user', JSON.stringify({nick, pw}));
+    currentUser = {nick, discord};
+    enterMain();
+  } catch(e){ showErr('reg-err','오류: '+e.message); }
+}
+
+async function doLogin(){
+  const nick = document.getElementById('log-nick').value.trim();
+  const pw = document.getElementById('log-pw').value.trim();
+  if(!nick||!pw) return showErr('log-err','닉네임과 비밀번호를 입력해주세요.');
+  try{
+    const snap = await db.ref('event_users/'+nick).once('value');
+    if(!snap.exists()) return showErr('log-err','닉네임을 찾을 수 없습니다.');
+    const d = snap.val();
+    if(d.pw !== pw) return showErr('log-err','비밀번호가 틀렸습니다.');
+    localStorage.setItem('codet_event_user', JSON.stringify({nick, pw}));
+    currentUser = {nick, discord: d.discord};
+    enterMain();
+  } catch(e){ showErr('log-err','오류: '+e.message); }
+}
+
+function doLogout(){
+  localStorage.removeItem('codet_event_user');
+  currentUser = null;
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  updateTopbar();
+}
+
+function enterMain(){
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('main-screen').style.display = 'block';
+  updateTopbar();
+  loadEvents();
+  loadNotice();
+  loadParticipants();
+}
+
+function updateTopbar(){
+  const tbr = document.getElementById('tb-right');
+  if(currentUser){
+    tbr.innerHTML = `<span class="user-chip">👤 ${esc(currentUser.nick)}</span><button class="btn-sm btn-logout" onclick="doLogout()">로그아웃</button>`;
+  } else {
+    tbr.innerHTML = `<button class="btn-sm btn-login-top" onclick="showAuthScreen()">로그인</button>`;
+  }
+}
+
+function showErr(id, msg){ const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; setTimeout(()=>el.style.display='none',4000); }
+
+// ─── EVENTS ───
+function loadEvents(){
+  db.ref('events').on('value', snap => {
+    eventsData = snap.val() || {};
+    renderEvents();
+  });
+}
+
+function renderEvents(){
+  const grid = document.getElementById('event-grid');
+  const events = Object.entries(eventsData);
+  if(!events.length){
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🎪</div><div class="empty-text">진행중인 이벤트가 없어요</div><div class="empty-sub">곧 새로운 이벤트가 열릴 예정이에요!</div></div>';
+    return;
+  }
+  const sorted = events.sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+  grid.innerHTML = sorted.map(([id, ev]) => {
+    const status = getStatus(ev);
+    const participated = currentUser && ev.participants && ev.participants[safeKey(currentUser.nick)];
+    const cnt = ev.participants ? Object.keys(ev.participants).length : 0;
+    const badgeClass = status==='ongoing'?'badge-ongoing':status==='upcoming'?'badge-upcoming':'badge-ended';
+    const badgeText = status==='ongoing'?'진행중':status==='upcoming'?'예정':'종료';
+    const imgHtml = ev.couponImg ? `<img src="${esc(ev.couponImg)}" alt="쿠폰">` : '🎫';
+    return `
+    <div class="event-card" onclick="openEventModal('${id}')">
+      <div class="event-card-img">
+        ${imgHtml}
+        <span class="event-badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div class="event-body">
+        <div class="event-name">${esc(ev.title||'이벤트')}</div>
+        <div class="event-period">🕐 ${formatPeriod(ev)}</div>
+        <div class="event-coupon-row">
+          <span class="event-coupon-icon">🎟️</span>
+          <span class="event-coupon-name">${esc(ev.couponName||'쿠폰')}</span>
+        </div>
+        <div class="event-participants">👥 참여자 ${cnt}명</div>
+        <button class="event-participate-btn ${participated?'ep-done':status==='ongoing'?'ep-active':'ep-ended'}" style="margin-top:10px">
+          ${participated?'✅ 참여 완료':status==='ongoing'?'이벤트 참여하기':'참여 불가'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getStatus(ev){
+  const now = Date.now();
+  if(!ev.startTime && !ev.endTime) return 'ongoing';
+  if(ev.startTime && now < ev.startTime) return 'upcoming';
+  if(ev.endTime && now > ev.endTime) return 'ended';
+  return 'ongoing';
+}
+
+function formatPeriod(ev){
+  if(!ev.startTime && !ev.endTime) return '상시 진행';
+  const fmt = ts => new Date(ts).toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  if(ev.startTime && ev.endTime) return `${fmt(ev.startTime)} ~ ${fmt(ev.endTime)}`;
+  if(ev.endTime) return `~ ${fmt(ev.endTime)}`;
+  return `${fmt(ev.startTime)} ~`;
+}
+
+// ─── EVENT MODAL ───
+function openEventModal(id){
+  if(!currentUser){ showToast('로그인이 필요해요'); return; }
+  currentEventId = id;
+  const ev = eventsData[id];
+  if(!ev) return;
+  const status = getStatus(ev);
+  const participated = ev.participants && ev.participants[safeKey(currentUser.nick)];
+  const cnt = ev.participants ? Object.keys(ev.participants).length : 0;
+  const imgEl = document.getElementById('em-img');
+  imgEl.innerHTML = ev.couponImg ? `<img src="${esc(ev.couponImg)}" alt="쿠폰">` : '🎫';
+  document.getElementById('em-title').textContent = ev.title||'이벤트';
+  document.getElementById('em-name').textContent = ev.title||'이벤트';
+  document.getElementById('em-period').textContent = formatPeriod(ev);
+  document.getElementById('em-coupon-name').textContent = ev.couponName||'쿠폰';
+  document.getElementById('em-coupon-desc').textContent = ev.couponDesc||'';
+  document.getElementById('em-count').textContent = cnt;
+  const btn = document.getElementById('em-btn');
+  if(participated){ btn.className='modal-participate-btn mp-done'; btn.textContent='✅ 이미 참여했어요'; }
+  else if(status==='ongoing'){ btn.className='modal-participate-btn mp-active'; btn.textContent='이벤트 참여하기 →'; }
+  else { btn.className='modal-participate-btn mp-ended'; btn.textContent=status==='upcoming'?'아직 시작 전이에요':'이벤트가 종료됐어요'; }
+  document.getElementById('event-modal').classList.add('show');
+}
+
+function closeEventModal(e){ if(!e||e.target===document.getElementById('event-modal')) document.getElementById('event-modal').classList.remove('show'); }
+
+async function participateEvent(){
+  if(!currentUser||!currentEventId) return;
+  const ev = eventsData[currentEventId];
+  if(!ev) return;
+  const status = getStatus(ev);
+  if(status!=='ongoing'){ showToast('참여 가능한 이벤트가 아닙니다'); return; }
+  if(ev.participants && ev.participants[safeKey(currentUser.nick)]){ showToast('이미 참여한 이벤트입니다'); return; }
+  try{
+    await db.ref(`events/${currentEventId}/participants/${safeKey(currentUser.nick)}`).set({
+      nick: currentUser.nick,
+      discord: currentUser.discord,
+      joinedAt: Date.now()
+    });
+    // 참여자 명단에도 기록
+    await db.ref(`event_participants/${currentEventId}/${safeKey(currentUser.nick)}`).set({
+      nick: currentUser.nick,
+      discord: currentUser.discord,
+      eventTitle: ev.title||'이벤트',
+      joinedAt: Date.now()
+    });
+    closeEventModal();
+    showParticipateToast();
+  } catch(e){ showToast('오류: '+e.message); }
+}
+
+function showParticipateToast(){
+  const toast = document.getElementById('toast');
+  toast.innerHTML = `✅ 참여 되었습니다!<br><span style="font-size:11px;color:#aaa">쿠폰이 안날라온다면 고객센터에 문의해주세요 <span style="color:#6ab0ff;cursor:pointer" onclick="openChannelIO()">→ 문의하기</span></span>`;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 5000);
+}
+
+function showToast(msg){
+  const toast = document.getElementById('toast');
+  toast.innerHTML = msg;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 3000);
+}
+
+// ─── PARTICIPANTS TABLE ───
+function loadParticipants(){
+  db.ref('event_participants').on('value', snap => {
+    const data = snap.val() || {};
+    renderParticipants(data);
+  });
+}
+
+function renderParticipants(data){
+  const wrap = document.getElementById('participants-wrap');
+  const rows = [];
+  Object.values(data).forEach(eventParts => {
+    Object.values(eventParts).forEach(p => rows.push(p));
+  });
+  rows.sort((a,b)=>(b.joinedAt||0)-(a.joinedAt||0));
+  if(!rows.length){
+    wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">아직 참여자가 없어요</div><div class="empty-sub">첫 번째 참여자가 되어보세요!</div></div>';
+    return;
+  }
+  wrap.innerHTML = `<table class="part-table">
+    <thead><tr><th>#</th><th>마크닉</th><th>디스코드</th><th>이벤트</th><th>참여일시</th></tr></thead>
+    <tbody>${rows.map((r,i)=>`
+      <tr>
+        <td>${i+1}</td>
+        <td class="part-nick">${esc(r.nick||'-')}</td>
+        <td class="part-discord">${esc(r.discord||'-')}</td>
+        <td style="font-size:12px;color:var(--text2)">${esc(r.eventTitle||'-')}</td>
+        <td class="part-date">${r.joinedAt?new Date(r.joinedAt).toLocaleDateString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'-'}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+// ─── NOTICE ───
+function loadNotice(){
+  db.ref('event_notices').orderByChild('createdAt').limitToLast(1).on('value', snap => {
+    const d = snap.val();
+    if(!d){ document.getElementById('notice-banner').style.display = 'none'; return; }
+    const entries = Object.entries(d);
+    if(!entries.length){ document.getElementById('notice-banner').style.display = 'none'; return; }
+    const [,notice] = entries[0];
+    document.getElementById('notice-title-text').textContent = notice.title||'';
+    document.getElementById('nm-title').textContent = notice.title||'';
+    document.getElementById('nm-content').textContent = notice.content||'';
+    document.getElementById('notice-banner').style.display = 'flex';
+  });
+}
+
+function openNoticeModal(){ document.getElementById('notice-modal').classList.add('show'); }
+function closeNoticeModal(e){ if(!e||e.target===document.getElementById('notice-modal')) document.getElementById('notice-modal').classList.remove('show'); }
+
+// ─── UTILS ───
+function safeKey(str){ return str.replace(/[.#$[\]]/g,'_'); }
+function esc(t){ const d=document.createElement('div');d.textContent=t;return d.innerHTML; }
+</script>
+</body>
+</html>
