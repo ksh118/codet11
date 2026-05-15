@@ -14,89 +14,91 @@
   --accent: #3182F6; --r: 20px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Noto Sans KR', sans-serif; }
-body { background: var(--bg); color: var(--text); line-height: 1.5; }
+body { background: var(--bg); color: var(--text); line-height: 1.5; overflow-x: hidden; }
 
-/* Header */
+/* Header & Logo */
 .header { height: 64px; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
 .logo { font-size: 22px; font-weight: 900; color: var(--accent); letter-spacing: -1px; }
 
 /* Server Slider */
 .server-section { background: #fff; padding: 24px 0; border-bottom: 1px solid var(--border); overflow: hidden; }
 .slider-title { max-width: 1000px; margin: 0 auto 12px; padding: 0 24px; font-size: 13px; font-weight: 700; color: var(--text3); }
-.server-viewport { display: flex; overflow: hidden; position: relative; width: 100%; }
-.server-track { display: flex; gap: 16px; animation: scroll 30s linear infinite; padding-left: 16px; }
+.server-viewport { display: flex; overflow: hidden; width: 100%; }
+.server-track { display: flex; gap: 16px; animation: scroll 30s linear infinite; }
 @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 .server-card { background: var(--bg); padding: 16px 24px; border-radius: 16px; min-width: 220px; flex-shrink: 0; }
-.server-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
-.server-card p { font-size: 12px; color: var(--text2); }
 
-/* Layout */
-.container { max-width: 1000px; margin: 0 auto; padding: 32px 24px; }
-.section-header { margin: 40px 0 20px; display: flex; align-items: center; justify-content: space-between; }
-.section-title { font-size: 22px; font-weight: 800; }
+/* Tabs */
+.tab-container { display: flex; gap: 24px; margin: 32px 0 20px; border-bottom: 1px solid var(--border); }
+.event-tab { padding: 12px 4px; font-size: 17px; font-weight: 700; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; }
+.event-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
 
-/* Grid & Cards */
+/* Layout & Grid */
+.container { max-width: 1000px; margin: 0 auto; padding: 0 24px 60px; }
+.event-section { display: none; }
+.event-section.active { display: block; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
-.card { background: var(--surface); border-radius: var(--r); overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.04); cursor: pointer; transition: 0.3s; border: 1px solid rgba(0,0,0,0.02); }
-.card:hover { transform: translateY(-6px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
+.card { background: var(--surface); border-radius: var(--r); overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.04); cursor: pointer; transition: 0.3s; }
+.card:hover { transform: translateY(-6px); }
 .card-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
 .card-content { padding: 20px; }
-.badge { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; margin-bottom: 10px; }
-.badge-on { background: #EBF3FE; color: var(--accent); }
-.badge-off { background: #F2F4F6; color: var(--text3); }
+
+/* Customer Service Section */
+.cs-section { margin-top: 80px; padding: 40px; background: #fff; border-radius: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.cs-text b { font-size: 18px; display: block; margin-bottom: 4px; }
+.cs-text p { font-size: 14px; color: var(--text2); }
+.cs-btn { padding: 16px 28px; background: var(--bg); border: none; border-radius: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; }
 
 /* Modal */
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
 .modal.active { display: flex; }
-.modal-content { background: #fff; width: 100%; max-width: 540px; border-radius: 28px; padding: 32px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
+.modal-content { background: #fff; width: 90%; max-width: 500px; border-radius: 28px; padding: 32px; max-height: 85vh; overflow-y: auto; position: relative; }
 
-/* Auth Overlay */
+/* Auth */
 #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-.auth-box { background: #fff; padding: 48px 32px; border-radius: 32px; width: 100%; max-width: 400px; box-shadow: 0 12px 40px rgba(0,0,0,0.06); text-align: center; }
-.auth-input { width: 100%; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 14px; outline: none; font-size: 15px; background: #F9FAFB; }
-.auth-input:focus { border-color: var(--accent); background: #fff; }
-.btn-main { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; font-size: 16px; }
+.auth-box { background: #fff; padding: 40px; border-radius: 30px; width: 100%; max-width: 400px; text-align: center; }
+.auth-input { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 12px; outline: none; }
 </style>
 </head>
 <body>
 
 <div id="auth-screen">
   <div class="auth-box">
-    <div class="logo" style="margin-bottom: 40px;">마코</div>
-    <div id="auth-ui">
-      <input type="text" id="user-nick" class="auth-input" placeholder="마인크래프트 닉네임">
-      <div id="join-fields" style="display:none;">
-        <input type="text" id="user-discord" class="auth-input" placeholder="디스코드 사용자명">
-      </div>
-      <input type="password" id="user-pw" class="auth-input" placeholder="비밀번호 (숫자)">
-      <button class="btn-main" onclick="handleAuth()">시작하기</button>
-      <p id="auth-toggle-msg" onclick="toggleAuthMode()" style="margin-top:20px; font-size:13px; color:var(--text3); cursor:pointer;">계정이 없으신가요? 회원가입</p>
-    </div>
+    <div class="logo" style="margin-bottom: 30px;">마코</div>
+    <input type="text" id="user-nick" class="auth-input" placeholder="마인크래프트 닉네임">
+    <div id="join-only" style="display:none;"><input type="text" id="user-discord" class="auth-input" placeholder="디스코드 사용자명"></div>
+    <input type="password" id="user-pw" class="auth-input" placeholder="비밀번호 (숫자 4~10자)">
+    <button onclick="handleAuth()" style="width:100%; padding:14px; border-radius:12px; border:none; background:var(--accent); color:#fff; font-weight:700; cursor:pointer;">시작하기</button>
+    <p onclick="toggleAuth()" id="auth-msg" style="margin-top:20px; font-size:13px; color:var(--text3); cursor:pointer;">계정이 없으신가요? 회원가입</p>
   </div>
 </div>
 
 <div class="header">
   <div class="logo">마코</div>
-  <div id="user-info" style="margin-left:auto; font-size:14px; font-weight:700;"></div>
+  <div id="user-display" style="margin-left:auto; font-size:14px; font-weight:700;"></div>
 </div>
 
 <div class="server-section">
   <div class="slider-title">참여 가능 서버</div>
-  <div class="server-viewport">
-    <div class="server-track" id="server-track"></div>
-  </div>
+  <div class="server-viewport"><div class="server-track" id="server-track"></div></div>
 </div>
 
 <div class="container">
-  <div id="notice-banner" style="background:var(--accent); color:#fff; padding:16px 24px; border-radius:16px; margin-bottom:32px; display:none;">
-    <span style="font-weight:800; margin-right:8px;">공지</span> <span id="notice-text"></span>
+  <div class="tab-container">
+    <div class="event-tab active" onclick="switchTab('ongoing', this)">진행 중인 이벤트</div>
+    <div class="event-tab" onclick="switchTab('ended', this)">종료된 이벤트</div>
   </div>
 
-  <div class="section-header"><div class="section-title">진행 중인 이벤트</div></div>
-  <div class="grid" id="ongoing-grid"></div>
+  <div id="tab-ongoing" class="event-section active"><div class="grid" id="ongoing-grid"></div></div>
+  <div id="tab-ended" class="event-section"><div class="grid" id="ended-grid"></div></div>
 
-  <div class="section-header"><div class="section-title">종료된 이벤트</div></div>
-  <div class="grid" id="ended-grid"></div>
+  <div class="cs-section">
+    <div class="cs-text">
+      <b>문제가 생기셨나요?</b>
+      <p>쿠폰이 디스코드 DM으로 발송이 안되었나요? 고객센터에 문의하세요!</p>
+    </div>
+    <button class="cs-btn" onclick="window.open('https://discord.gg/yourlink')">🎧 고객센터 문의하기</button>
+  </div>
 </div>
 
 <div class="modal" id="modal" onclick="if(event.target===this)this.classList.remove('active')">
@@ -104,12 +106,13 @@ body { background: var(--bg); color: var(--text); line-height: 1.5; }
 </div>
 
 <script>
+// Firebase Config (본인의 설정값 확인)
 firebase.initializeApp({
   apiKey: "AIzaSyDIl0-jomcfA8ykz-nYK_rYaLb-IE_yICc",
   authDomain: "codet-597c7.firebaseapp.com",
   databaseURL: "https://codet-597c7-default-rtdb.firebaseio.com",
   projectId: "codet-597c7",
-  storageBucket: "codet-597c7.firebasestorage.app",
+  storageBucket: "codet-597c7.appspot.com",
   messagingSenderId: "619578457920",
   appId: "1:619578457920:web:52d98e7430f9b9820104a5"
 });
@@ -117,10 +120,10 @@ const db = firebase.database();
 let isJoin = false;
 let user = null;
 
-function toggleAuthMode() {
+function toggleAuth() {
   isJoin = !isJoin;
-  document.getElementById('join-fields').style.display = isJoin ? 'block' : 'none';
-  document.getElementById('auth-toggle-msg').innerText = isJoin ? '이미 계정이 있나요? 로그인' : '계정이 없으신가요? 회원가입';
+  document.getElementById('join-only').style.display = isJoin ? 'block' : 'none';
+  document.getElementById('auth-msg').innerText = isJoin ? '이미 계정이 있나요? 로그인' : '계정이 없으신가요? 회원가입';
 }
 
 async function handleAuth() {
@@ -132,7 +135,7 @@ async function handleAuth() {
     user = {nick, discord};
   } else {
     const snap = await db.ref('users/'+nick).once('value');
-    if(!snap.exists() || snap.val().pw !== pw) return alert('닉네임 또는 비밀번호가 틀립니다.');
+    if(!snap.exists() || snap.val().pw !== pw) return alert('정보가 틀립니다.');
     user = {nick, discord: snap.val().discord};
   }
   localStorage.setItem('maco_session', JSON.stringify(user));
@@ -144,31 +147,26 @@ window.onload = () => {
   if(saved) {
     user = JSON.parse(saved);
     document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('user-info').innerText = user.nick + '님';
-    loadContent();
+    document.getElementById('user-display').innerText = user.nick + '님';
+    loadData();
   }
 };
 
-function loadContent() {
-  // 공지
-  db.ref('notices').limitToLast(1).on('value', snap => {
-    snap.forEach(n => {
-      document.getElementById('notice-banner').style.display = 'block';
-      document.getElementById('notice-text').innerText = n.val().title;
-    });
-  });
+function switchTab(type, el) {
+  document.querySelectorAll('.event-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.event-section').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+type).classList.add('active');
+}
 
-  // 서버 슬라이드
+function loadData() {
   db.ref('servers').on('value', snap => {
     const track = document.getElementById('server-track');
-    let content = '';
-    snap.forEach(s => {
-      content += `<div class="server-card"><h4>${s.val().name}</h4><p>${s.val().author}</p></div>`;
-    });
-    track.innerHTML = content + content; // 무한 스크롤 보정
+    let html = '';
+    snap.forEach(s => { html += `<div class="server-card"><b>${s.val().name}</b><p style="font-size:12px; color:var(--text3)">${s.val().author}</p></div>`; });
+    track.innerHTML = html + html;
   });
 
-  // 이벤트
   db.ref('events').on('value', snap => {
     const ongoing = document.getElementById('ongoing-grid');
     const ended = document.getElementById('ended-grid');
@@ -176,46 +174,32 @@ function loadContent() {
     snap.forEach(e => {
       const ev = e.val();
       const isEnd = ev.status === 'ended';
-      const card = `
-        <div class="card" onclick="openEvent('${e.key}')">
-          <img src="${ev.img}" class="card-img">
-          <div class="card-content">
-            <span class="badge ${isEnd?'badge-off':'badge-on'}">${isEnd?'종료됨':'진행중'}</span>
-            <h3 style="font-size:18px; font-weight:800;">${ev.title}</h3>
-          </div>
-        </div>`;
-      if(isEnd) ended.innerHTML += card;
-      else ongoing.innerHTML += card;
+      const card = `<div class="card" onclick="openEvent('${e.key}')"><img src="${ev.img}" class="card-img"><div class="card-content"><h3 style="font-size:18px;">${ev.title}</h3></div></div>`;
+      if(isEnd) ended.innerHTML += card; else ongoing.innerHTML += card;
     });
   });
 }
 
 async function openEvent(id) {
   const ev = (await db.ref('events/'+id).once('value')).val();
-  const parts = await db.ref('event_participants/'+id).once('value');
+  const parts = await db.ref('participants/'+id).once('value');
   let partList = '';
   parts.forEach(p => { partList += `<li>${p.val().nick}</li>`; });
 
   document.getElementById('modal-content').innerHTML = `
-    <img src="${ev.img}" style="width:100%; border-radius:16px; margin-bottom:24px;">
-    <h2 style="font-size:24px; font-weight:900; margin-bottom:12px;">${ev.title}</h2>
-    <p style="color:var(--text2); margin-bottom:24px;">${ev.desc}</p>
-    <div style="background:var(--bg); padding:20px; border-radius:16px; margin-bottom:24px;">
-        <span style="font-size:12px; color:var(--text3); font-weight:700;">지급 쿠폰</span>
-        <div style="font-size:18px; font-weight:800; color:var(--accent);">${ev.couponName}</div>
-    </div>
-    <button class="btn-main" onclick="joinEvent('${id}')">참여하기</button>
-    <div style="margin-top:32px;">
-      <h4 style="font-size:14px; margin-bottom:12px;">참여자 명단</h4>
-      <ul style="font-size:13px; color:var(--text2); display:grid; grid-template-columns:1fr 1fr; gap:8px;">${partList || '참여자가 없습니다.'}</ul>
-    </div>
+    <img src="${ev.img}" style="width:100%; border-radius:15px; margin-bottom:20px;">
+    <h2>${ev.title}</h2>
+    <p style="margin:15px 0; color:var(--text2);">${ev.desc}</p>
+    <div style="background:var(--bg); padding:15px; border-radius:12px; margin-bottom:20px;"><b>증정 쿠폰:</b> ${ev.couponName}</div>
+    <button onclick="joinEvent('${id}')" style="width:100%; padding:15px; border-radius:12px; border:none; background:var(--accent); color:#fff; font-weight:700;">참여하기</button>
+    <div style="margin-top:25px;"><h4>참여자 명단</h4><ul style="font-size:13px; color:var(--text3); margin-top:10px; display:grid; grid-template-columns:1fr 1fr;">${partList || '없음'}</ul></div>
   `;
   document.getElementById('modal').classList.add('active');
 }
 
 async function joinEvent(id) {
-  await db.ref(`event_participants/${id}/${user.nick}`).set({nick: user.nick, time: Date.now()});
-  alert('이벤트 참여가 완료되었습니다!');
+  await db.ref(`participants/${id}/${user.nick}`).set({nick: user.nick, time: Date.now()});
+  alert('참여되었습니다!');
   openEvent(id);
 }
 </script>
