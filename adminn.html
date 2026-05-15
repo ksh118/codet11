@@ -7,98 +7,148 @@
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-storage-compat.js"></script>
 <style>
-  body { font-family: sans-serif; background: #f2f4f6; padding: 40px; display: flex; gap: 30px; }
-  .sidebar { width: 220px; }
-  .tab-btn { width: 100%; padding: 15px; text-align: left; border: none; background: #fff; margin-bottom: 8px; border-radius: 12px; font-weight: 700; cursor: pointer; }
-  .tab-btn.active { background: #3182f6; color: #fff; }
-  .content { flex: 1; background: #fff; padding: 40px; border-radius: 24px; }
+  :root { --accent: #3182f6; --bg: #f2f4f6; }
+  body { font-family: sans-serif; background: var(--bg); padding: 40px; display: flex; gap: 30px; margin: 0; }
+  .sidebar { width: 240px; position: sticky; top: 40px; height: fit-content; }
+  .tab-btn { width: 100%; padding: 16px; text-align: left; border: none; background: #fff; margin-bottom: 8px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+  .tab-btn.active { background: var(--accent); color: #fff; }
+  .content { flex: 1; background: #fff; padding: 40px; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
   .card { display: none; }
   .card.active { display: block; }
-  input, textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; }
-  .list-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-  .user-badge { padding: 8px 12px; border-radius: 20px; cursor: pointer; background: #eee; font-size: 13px; font-weight: 700; }
-  .user-badge.win { background: #3182f6; color: #fff; }
+  input, textarea, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; outline: none; }
+  .main-btn { width: 100%; padding: 15px; background: var(--accent); color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+  .list-item { padding: 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+  .user-badge { padding: 8px 16px; border-radius: 20px; cursor: pointer; background: #eee; font-size: 13px; font-weight: 700; transition: 0.2s; }
+  .user-badge.win { background: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
 
 <div class="sidebar">
-  <h2 style="color:#3182f6; margin-bottom:30px;">MACO Admin</h2>
-  <button class="tab-btn active" onclick="showTab('tab-ev')">🎪 이벤트/당첨자</button>
-  <button class="tab-btn" onclick="showTab('tab-cp')">🎁 쿠폰 관리</button>
-  <button class="tab-btn" onclick="showTab('tab-sv')">🎮 서버 관리</button>
+  <h2 style="color:var(--accent); margin-bottom:30px; font-weight: 900;">MACO Admin</h2>
+  <button class="tab-btn active" onclick="showTab('tab-ev', this)">🎪 이벤트 & 당첨자</button>
+  <button class="tab-btn" onclick="showTab('tab-cp', this)">🎁 상품(쿠폰) 관리</button>
+  <button class="tab-btn" onclick="showTab('tab-sv', this)">🎮 서버 홍보 관리</button>
+  <button class="tab-btn" onclick="showTab('tab-nt', this)">📢 공지사항 관리</button>
 </div>
 
 <div class="content">
   <div id="tab-ev" class="card active">
-    <h3>이벤트 등록 (이미지 업로드)</h3>
-    <input type="text" id="e-title" placeholder="제목">
+    <h3>이벤트 등록</h3>
+    <input type="text" id="e-title" placeholder="이벤트 제목">
+    <label style="font-size:12px; color:#888;">배너 이미지 업로드</label>
     <input type="file" id="e-file">
-    <textarea id="e-desc" placeholder="상세 내용"></textarea>
+    <textarea id="e-desc" placeholder="상세 내용" rows="4"></textarea>
     <select id="e-coupon-select"></select>
-    <button onclick="saveEvent()" style="width:100%; padding:15px; background:#3182f6; color:#fff; border:none; border-radius:12px; font-weight:700;">저장하기</button>
+    <button class="main-btn" onclick="saveEvent()">이벤트 저장 및 게시</button>
     
-    <div id="admin-ev-list" style="margin-top:40px;"></div>
-    <div id="part-box" style="margin-top:30px; display:none; background:#f9fafb; padding:20px; border-radius:15px;">
-        <h4>참여자 (클릭하여 당첨 선정)</h4>
+    <div id="admin-ev-list" style="margin-top:40px;"><h4>이벤트 목록</h4></div>
+    <div id="part-box" style="margin-top:30px; display:none; background:#f9fafb; padding:25px; border-radius:15px; border:1px solid #eee;">
+        <h4>참여자 명단 (클릭하여 당첨자 선정)</h4>
         <div id="user-list" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:15px;"></div>
     </div>
   </div>
 
   <div id="tab-cp" class="card">
-    <h3>쿠폰 미리 등록</h3>
-    <input type="text" id="c-name" placeholder="쿠폰명">
-    <button onclick="db.ref('coupons').push({name:document.getElementById('c-name').value})">등록</button>
-    <div id="admin-cp-list"></div>
+    <h3>상품(쿠폰) 데이터 등록</h3>
+    <input type="text" id="c-name" placeholder="상품 이름 (예: 다이아몬드 64개)">
+    <button class="main-btn" onclick="saveCoupon()">상품 추가</button>
+    <div id="admin-cp-list" style="margin-top:20px;"></div>
   </div>
 
   <div id="tab-sv" class="card">
-    <h3>서버 홍보 관리</h3>
-    <input type="text" id="s-name" placeholder="서버명">
+    <h3>서버 목록 등록</h3>
+    <input type="text" id="s-name" placeholder="서버 이름">
     <input type="text" id="s-author" placeholder="제작자">
-    <button onclick="db.ref('servers').push({name:document.getElementById('s-name').value, author:document.getElementById('s-author').value})">등록</button>
-    <div id="admin-sv-list"></div>
+    <button class="main-btn" onclick="saveServer()">서버 추가</button>
+    <div id="admin-sv-list" style="margin-top:20px;"></div>
+  </div>
+
+  <div id="tab-nt" class="card">
+    <h3>공지사항 등록</h3>
+    <input type="text" id="n-title" placeholder="공지 제목">
+    <textarea id="n-content" placeholder="공지 상세 내용"></textarea>
+    <button class="main-btn" onclick="saveNotice()">공지 게시</button>
+    <div id="admin-nt-list" style="margin-top:20px;"></div>
   </div>
 </div>
 
 <script>
-// Firebase 설정 (사용자 페이지와 동일하게)
-firebase.initializeApp({ /* ... */ });
+firebase.initializeApp({
+  apiKey: "AIzaSyDIl0-jomcfA8ykz-nYK_rYaLb-IE_yICc",
+  authDomain: "codet-597c7.firebaseapp.com",
+  databaseURL: "https://codet-597c7-default-rtdb.firebaseio.com",
+  projectId: "codet-597c7",
+  storageBucket: "codet-597c7.appspot.com",
+  messagingSenderId: "619578457920",
+  appId: "1:619578457920:web:52d98e7430f9b9820104a5"
+});
 const db = firebase.database();
 const storage = firebase.storage();
 let selectedEv = null;
 
-function showTab(id) {
+function showTab(id, btn) {
   document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  event.target.classList.add('active');
+  btn.classList.add('active');
 }
 
+// 공지사항 등록
+async function saveNotice() {
+  const title = document.getElementById('n-title').value;
+  const content = document.getElementById('n-content').value;
+  await db.ref('notices').push({title, content, time: Date.now()});
+  alert('공지가 게시되었습니다.');
+}
+
+// 서버 등록
+async function saveServer() {
+  const name = document.getElementById('s-name').value;
+  const author = document.getElementById('s-author').value;
+  await db.ref('servers').push({name, author});
+  alert('서버가 등록되었습니다.');
+}
+
+// 상품(쿠폰) 등록
+async function saveCoupon() {
+  const name = document.getElementById('c-name').value;
+  await db.ref('coupons').push({name});
+  alert('상품이 추가되었습니다.');
+}
+
+// 이벤트 저장 (이미지 업로드 포함)
 async function saveEvent() {
   const file = document.getElementById('e-file').files[0];
+  const title = document.getElementById('e-title').value;
   let url = "";
   if(file) {
-    const ref = storage.ref('maco/'+Date.now());
+    alert('이미지를 업로드 중입니다. 잠시만 기다려주세요...');
+    const ref = storage.ref('events/'+Date.now()+'_'+file.name);
     await ref.put(file);
     url = await ref.getDownloadURL();
   }
   await db.ref('events/'+Date.now()).set({
-    title: document.getElementById('e-title').value,
+    title: title,
     img: url, desc: document.getElementById('e-desc').value,
     couponName: document.getElementById('e-coupon-select').value,
     status: 'ongoing'
   });
-  alert('저장 완료');
+  alert('이벤트가 성공적으로 게시되었습니다.');
+  location.reload();
 }
 
+// 실시간 목록 업데이트들
 db.ref('events').on('value', snap => {
   const list = document.getElementById('admin-ev-list');
   list.innerHTML = '<h4>목록 (참여자 확인은 클릭)</h4>';
   snap.forEach(e => {
-    list.innerHTML += `<div class="list-item" onclick="loadParts('${e.key}')">
-      <span>${e.val().title}</span>
-      <button onclick="db.ref('events/${e.key}').update({status:'ended'})">종료</button>
+    list.innerHTML += `<div class="list-item" onclick="loadParts('${e.key}')" style="cursor:pointer; background:#fff; margin-bottom:5px; border-radius:8px;">
+      <span>${e.val().title} (${e.val().status})</span>
+      <div>
+        <button onclick="db.ref('events/${e.key}').update({status:'ended'})">종료</button>
+        <button onclick="db.ref('events/${e.key}').remove()" style="color:red">삭제</button>
+      </div>
     </div>`;
   });
 });
@@ -111,10 +161,11 @@ async function loadParts(id) {
   document.getElementById('part-box').style.display = 'block';
   const box = document.getElementById('user-list');
   box.innerHTML = '';
+  if(!pSnap.exists()) box.innerHTML = '참여자가 없습니다.';
   pSnap.forEach(p => {
     const nick = p.val().nick;
     const isWin = winners[nick];
-    box.innerHTML += `<div class="user-badge ${isWin?'win':''}" onclick="toggleWin('${nick}')">${nick}</div>`;
+    box.innerHTML += `<div class="user-badge ${isWin?'win':''}" onclick="toggleWin('${nick}')">${nick} ${isWin?'(당첨)':''}</div>`;
   });
 }
 
@@ -128,8 +179,29 @@ async function toggleWin(nick) {
 
 db.ref('coupons').on('value', snap => {
   const sel = document.getElementById('e-coupon-select');
-  sel.innerHTML = '<option>지급 쿠폰 선택</option>';
-  snap.forEach(c => { sel.innerHTML += `<option>${c.val().name}</option>`; });
+  const list = document.getElementById('admin-cp-list');
+  sel.innerHTML = '<option value="">지급할 상품 선택</option>';
+  list.innerHTML = '<h4>상품 목록</h4>';
+  snap.forEach(c => { 
+    sel.innerHTML += `<option>${c.val().name}</option>`;
+    list.innerHTML += `<div class="list-item"><span>${c.val().name}</span><button onclick="db.ref('coupons/${c.key}').remove()">삭제</button></div>`;
+  });
+});
+
+db.ref('servers').on('value', snap => {
+  const list = document.getElementById('admin-sv-list');
+  list.innerHTML = '<h4>서버 목록</h4>';
+  snap.forEach(s => {
+    list.innerHTML += `<div class="list-item"><span>${s.val().name} (${s.val().author})</span><button onclick="db.ref('servers/${s.key}').remove()">삭제</button></div>`;
+  });
+});
+
+db.ref('notices').on('value', snap => {
+  const list = document.getElementById('admin-nt-list');
+  list.innerHTML = '<h4>공지 목록</h4>';
+  snap.forEach(n => {
+    list.innerHTML += `<div class="list-item"><span>${n.val().title}</span><button onclick="db.ref('notices/${n.key}').remove()">삭제</button></div>`;
+  });
 });
 </script>
 </body>
