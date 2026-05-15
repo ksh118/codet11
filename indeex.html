@@ -20,6 +20,14 @@ body { background: var(--bg); color: var(--text); line-height: 1.5; overflow-x: 
 .header { height: 64px; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); display: flex; align-items: center; padding: 0 24px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); }
 .logo { font-size: 22px; font-weight: 900; color: var(--accent); letter-spacing: -1px; }
 
+/* Server Slider */
+.server-section { background: #fff; padding: 24px 0; border-bottom: 1px solid var(--border); overflow: hidden; }
+.slider-title { max-width: 1000px; margin: 0 auto 12px; padding: 0 24px; font-size: 13px; font-weight: 700; color: var(--text3); }
+.server-viewport { display: flex; overflow: hidden; width: 100%; }
+.server-track { display: flex; gap: 16px; animation: scroll 30s linear infinite; }
+@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.server-card { background: var(--bg); padding: 16px 24px; border-radius: 16px; min-width: 220px; flex-shrink: 0; }
+
 /* Tabs */
 .tab-container { display: flex; gap: 20px; margin: 24px 0; border-bottom: 1px solid var(--border); overflow-x: auto; }
 .event-tab { padding: 12px 8px; font-size: 15px; font-weight: 700; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
@@ -34,15 +42,22 @@ body { background: var(--bg); color: var(--text); line-height: 1.5; overflow-x: 
 .card { background: var(--surface); border-radius: var(--r); overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.04); cursor: pointer; transition: 0.3s; position: relative; }
 .card:hover { transform: translateY(-5px); }
 .card-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+.card-content { padding: 20px; }
 .winner-badge { position: absolute; top: 12px; right: 12px; background: var(--gold); color: #000; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; border: 1px solid rgba(0,0,0,0.1); }
 
 /* Win Popup */
-#win-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 3000; display: none; align-items: center; justify-content: center; text-align: center; color: #fff; }
+#win-popup { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 3000; display: none; align-items: center; justify-content: center; text-align: center; }
 .win-box { background: #fff; color: #000; padding: 40px; border-radius: 32px; max-width: 350px; animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 @keyframes pop { from { transform: scale(0.5); } to { transform: scale(1); } }
 
-/* CSS Common */
-.btn-p { width: 100%; padding: 16px; border-radius: 14px; border: none; background: var(--accent); color: #fff; font-weight: 700; cursor: pointer; }
+/* CS Section */
+.cs-section { margin-top: 60px; padding: 30px; background: #fff; border-radius: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+.cs-btn { padding: 14px 20px; border-radius: 12px; border: none; background: var(--bg); font-weight: 700; cursor: pointer; }
+
+/* Auth */
+#auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+.auth-box { background: #fff; padding: 40px; border-radius: 30px; width: 100%; max-width: 400px; text-align: center; }
+.auth-input { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 12px; outline: none; }
 </style>
 </head>
 <body>
@@ -52,15 +67,34 @@ body { background: var(--bg); color: var(--text); line-height: 1.5; overflow-x: 
     <div style="font-size: 50px;">🎉</div>
     <h2 style="font-size: 24px; font-weight: 900; margin: 15px 0;">당첨 되었습니다!</h2>
     <p id="win-msg" style="color: var(--text2); margin-bottom: 25px;"></p>
-    <button class="btn-p" onclick="document.getElementById('win-popup').style.display='none'">확인</button>
+    <button onclick="document.getElementById('win-popup').style.display='none'" style="width:100%; padding:14px; border-radius:12px; border:none; background:var(--accent); color:#fff; font-weight:700; cursor:pointer;">확인</button>
   </div>
 </div>
 
-<div class="header"><div class="logo">마코</div><div id="user-display" style="margin-left:auto; font-size:14px; font-weight:700;"></div></div>
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="logo" style="margin-bottom: 30px;">마코</div>
+    <input type="text" id="user-nick" class="auth-input" placeholder="마인크래프트 닉네임">
+    <div id="join-only" style="display:none;"><input type="text" id="user-discord" class="auth-input" placeholder="디스코드 사용자명"></div>
+    <input type="password" id="user-pw" class="auth-input" placeholder="비밀번호">
+    <button onclick="handleAuth()" style="width:100%; padding:14px; border-radius:12px; border:none; background:var(--accent); color:#fff; font-weight:700; cursor:pointer;">시작하기</button>
+    <p onclick="toggleAuth()" id="auth-msg" style="margin-top:20px; font-size:13px; color:var(--text3); cursor:pointer;">계정이 없으신가요? 회원가입</p>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo">마코</div>
+  <div id="user-display" style="margin-left:auto; font-size:14px; font-weight:700;"></div>
+</div>
+
+<div class="server-section">
+  <div class="slider-title">참여 가능 서버</div>
+  <div class="server-viewport"><div class="server-track" id="server-track"></div></div>
+</div>
 
 <div class="container">
   <div class="tab-container">
-    <div class="event-tab active" onclick="switchTab('ongoing', this)">진행 중</div>
+    <div class="event-tab active" onclick="switchTab('ongoing', this)">진행 중인 이벤트</div>
     <div class="event-tab" onclick="switchTab('ended', this)">종료된 이벤트</div>
     <div class="event-tab" style="color:#FF9500" onclick="switchTab('mywin', this)">🏆 나의 당첨 내역</div>
   </div>
@@ -68,23 +102,64 @@ body { background: var(--bg); color: var(--text); line-height: 1.5; overflow-x: 
   <div id="tab-ongoing" class="event-section active"><div class="grid" id="ongoing-grid"></div></div>
   <div id="tab-ended" class="event-section"><div class="grid" id="ended-grid"></div></div>
   <div id="tab-mywin" class="event-section"><div class="grid" id="mywin-grid"></div></div>
+
+  <div class="cs-section">
+    <div>
+      <b style="font-size:16px;">문제가 생기셨나요?</b>
+      <p style="font-size:14px; color:var(--text2); margin-top:4px;">쿠폰이 디스코드 DM으로 발송이 안되었나요? 고객센터에 문의하세요!</p>
+    </div>
+    <button class="cs-btn" onclick="window.open('https://discord.gg/your_discord')">🎧 고객센터 문의</button>
+  </div>
 </div>
 
-<div class="modal" id="modal" onclick="if(event.target===this)this.classList.remove('active')" style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
-  <div class="modal-content" id="modal-content" style="background:#fff; width:90%; max-width:450px; border-radius:28px; padding:30px;"></div>
+<div id="modal" onclick="if(event.target===this)this.style.display='none'" style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+  <div id="modal-content" style="background:#fff; width:90%; max-width:450px; border-radius:28px; padding:30px; position:relative;"></div>
 </div>
 
 <script>
-firebase.initializeApp({ /* 여기에 본인의 파이어베이스 설정을 넣으세요 */ });
+// Firebase 설정 (본인의 값으로 교체)
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  databaseURL: "https://your-db.firebaseio.com",
+  projectId: "your-project",
+  storageBucket: "your-project.appspot.com"
+};
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const user = JSON.parse(localStorage.getItem('maco_session'));
+let isJoin = false;
+let user = null;
 
-if(!user) { location.href = 'login.html'; } // 로그인 안되어있으면 로그인으로
+function toggleAuth() {
+  isJoin = !isJoin;
+  document.getElementById('join-only').style.display = isJoin ? 'block' : 'none';
+  document.getElementById('auth-msg').innerText = isJoin ? '이미 계정이 있나요? 로그인' : '계정이 없으신가요? 회원가입';
+}
+
+async function handleAuth() {
+  const nick = document.getElementById('user-nick').value;
+  const pw = document.getElementById('user-pw').value;
+  if(isJoin) {
+    const discord = document.getElementById('user-discord').value;
+    await db.ref('users/'+nick).set({pw, discord});
+    user = {nick, discord};
+  } else {
+    const snap = await db.ref('users/'+nick).once('value');
+    if(!snap.exists() || snap.val().pw !== pw) return alert('정보 불일치');
+    user = {nick, discord: snap.val().discord};
+  }
+  localStorage.setItem('maco_session', JSON.stringify(user));
+  location.reload();
+}
 
 window.onload = () => {
+  const saved = localStorage.getItem('maco_session');
+  if(saved) {
+    user = JSON.parse(saved);
+    document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('user-display').innerText = user.nick + '님';
-    loadData();
-    checkWinner(); // 로그인 시 당첨 여부 실시간 확인
+    loadContent();
+    checkWinner();
+  }
 };
 
 function switchTab(type, el) {
@@ -94,7 +169,16 @@ function switchTab(type, el) {
   document.getElementById('tab-'+type).classList.add('active');
 }
 
-function loadData() {
+function loadContent() {
+  // 서버 슬라이드
+  db.ref('servers').on('value', snap => {
+    const track = document.getElementById('server-track');
+    let html = '';
+    snap.forEach(s => { html += `<div class="server-card"><b>${s.val().name}</b><p style="font-size:12px;color:var(--text3)">${s.val().author}</p></div>`; });
+    track.innerHTML = html + html;
+  });
+
+  // 이벤트 로드
   db.ref('events').on('value', snap => {
     const ongoing = document.getElementById('ongoing-grid');
     const ended = document.getElementById('ended-grid');
@@ -105,48 +189,46 @@ function loadData() {
       const ev = e.val();
       const isEnd = ev.status === 'ended';
       const isWin = ev.winners && ev.winners[user.nick];
-      
-      const card = `
-        <div class="card" onclick="openEvent('${e.key}')">
-          ${isWin ? '<div class="winner-badge">나의 당첨</div>' : ''}
-          <img src="${ev.img}" class="card-img">
-          <div class="card-content"><h3>${ev.title}</h3></div>
-        </div>`;
-
-      if(isEnd) ended.innerHTML += card;
-      else ongoing.innerHTML += card;
-
+      const card = `<div class="card" onclick="openEvent('${e.key}')">
+        ${isWin?'<div class="winner-badge">나의 당첨</div>':''}
+        <img src="${ev.img}" class="card-img">
+        <div class="card-content"><h3>${ev.title}</h3></div>
+      </div>`;
+      if(isEnd) ended.innerHTML += card; else ongoing.innerHTML += card;
       if(isWin) mywin.innerHTML += card;
     });
   });
 }
 
-// 당첨 여부 확인 및 팝업
-async function checkWinner() {
+async function openEvent(id) {
+  const ev = (await db.ref('events/'+id).once('value')).val();
+  const winners = ev.winners ? Object.keys(ev.winners).join(', ') : '발표 전';
+  const modal = document.getElementById('modal-content');
+  
+  modal.innerHTML = `
+    <img src="${ev.img}" style="width:100%; border-radius:15px; margin-bottom:20px;">
+    <h2>${ev.title}</h2>
+    ${ev.status === 'ended' ? `<div style="background:#FFF9E5; padding:15px; border-radius:12px; margin:15px 0;"><b>당첨자:</b> ${winners}</div>` : ''}
+    <p style="margin:15px 0; color:var(--text2);">${ev.desc}</p>
+    <button onclick="joinEvent('${id}')" style="width:100%; padding:15px; border-radius:12px; border:none; background:var(--accent); color:#fff; font-weight:700;">${ev.status==='ended'?'종료됨':'참여하기'}</button>
+  `;
+  document.getElementById('modal').style.display = 'flex';
+}
+
+async function joinEvent(id) {
+  await db.ref(`participants/${id}/${user.nick}`).set({nick: user.nick, time: Date.now()});
+  alert('참여 완료!');
+}
+
+function checkWinner() {
   db.ref('events').on('child_changed', snap => {
     const ev = snap.val();
     if(ev.winners && ev.winners[user.nick] && !ev.winners[user.nick].alerted) {
-      document.getElementById('win-msg').innerText = `[${ev.title}] 이벤트에 당첨되셨습니다!`;
+      document.getElementById('win-msg').innerText = `[${ev.title}] 당첨을 축하합니다!`;
       document.getElementById('win-popup').style.display = 'flex';
-      // 확인한 알림으로 처리 (중복 팝업 방지)
       db.ref(`events/${snap.key}/winners/${user.nick}`).update({alerted: true});
     }
   });
-}
-
-async function openEvent(id) {
-  const ev = (await db.ref('events/'+id).once('value')).val();
-  const winners = ev.winners ? Object.keys(ev.winners).join(', ') : '아직 발표 전입니다.';
-  
-  document.getElementById('modal-content').innerHTML = `
-    <img src="${ev.img}" style="width:100%; border-radius:15px; margin-bottom:20px;">
-    <h2>${ev.title}</h2>
-    ${ev.status === 'ended' ? `<div style="background:#FFF9E5; padding:15px; border-radius:12px; margin:15px 0; border:1px solid #FFE082;">
-        <b>축하합니다! 당첨자 명단:</b><br>${winners}</div>` : ''}
-    <p style="margin:15px 0; color:var(--text2);">${ev.desc}</p>
-    <button class="btn-p" onclick="joinEvent('${id}')">${ev.status==='ended'?'종료된 이벤트':'참여하기'}</button>
-  `;
-  document.getElementById('modal').style.display = 'flex';
 }
 </script>
 </body>
