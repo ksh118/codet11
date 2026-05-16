@@ -5,7 +5,6 @@
 <title>마코 어드민 - MACO Admin</title>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-storage-compat.js"></script>
 <style>
 :root { --accent: #3182f6; --bg: #f2f4f6; --border: #E5E8EB; --text: #191F28; --text2: #4E5968; --text3: #8B95A1; }
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
@@ -49,9 +48,14 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); backgro
 .btn-delete:hover { background: #FFCDD2; }
 .btn-edit { background: #E3F2FD; color: #1565C0; }
 .btn-edit:hover { background: #BBDEFB; }
+.btn-save { background: #E8F5E9; color: #2E7D32; }
+.btn-save:hover { background: #C8E6C9; }
 
 /* Participant & Winner UI */
-.part-box { margin-top: 24px; background: #f9fafb; padding: 24px; border-radius: 16px; border: 1px solid var(--border); }
+.part-box { margin-top: 24px; background: #f9fafb; padding: 24px; border-radius: 16px; border: 1px solid var(--border); position: relative; }
+.part-box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.part-box-close { border: none; background: #eee; border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--text2); }
+.part-box-close:hover { background: #FFCDD2; color: #C62828; }
 .winner-announce-box { background: linear-gradient(135deg, #FFF9E5, #FFFDE7); border: 2px solid #FFD700; border-radius: 14px; padding: 16px 20px; margin-bottom: 18px; }
 .winner-announce-title { font-weight: 900; font-size: 15px; margin-bottom: 10px; }
 .winner-chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -69,8 +73,22 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); backgro
 .edit-section.show { display: block; }
 .edit-section h4 { color: var(--accent); margin-bottom: 16px; }
 
-/* Upload progress */
-.upload-status { font-size: 13px; color: var(--text3); margin-top: -10px; margin-bottom: 14px; min-height: 18px; }
+/* Upload */
+.upload-status { font-size: 13px; margin-top: -10px; margin-bottom: 14px; min-height: 18px; padding: 6px 10px; border-radius: 8px; }
+.upload-status.idle { color: var(--text3); background: transparent; }
+.upload-status.uploading { color: #1565C0; background: #E3F2FD; }
+.upload-status.done { color: #2E7D32; background: #E8F5E9; }
+.upload-status.error { color: #C62828; background: #FFEBEE; }
+
+/* Member table */
+.member-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
+.member-table th { background: var(--bg); padding: 12px 14px; text-align: left; font-weight: 700; color: var(--text2); border-bottom: 2px solid var(--border); }
+.member-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+.member-table tr:last-child td { border-bottom: none; }
+.member-table tr:hover td { background: #f8faff; }
+.member-edit-input { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; background: #fff; margin: 0; }
+.member-edit-input:focus { border-color: var(--accent); outline: none; }
+.member-table-wrap { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: #fff; overflow-x: auto; }
 </style>
 </head>
 <body>
@@ -81,6 +99,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); backgro
   <button class="tab-btn" onclick="showTab('tab-cp', this)">🎁 상품(쿠폰) 관리</button>
   <button class="tab-btn" onclick="showTab('tab-sv', this)">🎮 서버 홍보 관리</button>
   <button class="tab-btn" onclick="showTab('tab-nt', this)">📢 공지사항 관리</button>
+  <button class="tab-btn" onclick="showTab('tab-mb', this)">👥 회원 목록</button>
 </div>
 
 <div class="content">
@@ -91,7 +110,7 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); backgro
     <input type="text" id="e-title" placeholder="이벤트 제목">
     <label style="font-size:12px; color:var(--text3); margin-bottom:6px; display:block;">배너 이미지 업로드</label>
     <input type="file" id="e-file" accept="image/*" onchange="previewUpload()">
-    <div class="upload-status" id="upload-status"></div>
+    <div class="upload-status idle" id="upload-status"></div>
     <img id="img-preview" style="display:none; width:100%; border-radius:10px; margin-bottom:14px; max-height:180px; object-fit:cover;">
     <textarea id="e-desc" placeholder="상세 내용 (이벤트 참여 방법, 기간 등)" rows="4"></textarea>
     <select id="e-coupon-select"><option value="">지급할 상품 선택</option></select>
@@ -104,7 +123,10 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); backgro
 
     <!-- 당첨자 선정 -->
     <div class="part-box" id="part-box" style="display:none;">
-      <h4>선택된 이벤트: <span id="selected-ev-title" style="color:var(--accent)"></span></h4>
+      <div class="part-box-header">
+        <h4 style="margin-bottom:0;">선택된 이벤트: <span id="selected-ev-title" style="color:var(--accent)"></span></h4>
+        <button class="part-box-close" onclick="closePartBox()">✕ 닫기</button>
+      </div>
 
       <!-- 당첨자 박스 -->
       <div class="winner-announce-box" id="winner-announce-box">
@@ -172,6 +194,27 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); backgro
     </div>
   </div>
 
+  <!-- 회원 목록 탭 -->
+  <div id="tab-mb" class="card">
+    <h3>👥 회원 목록</h3>
+    <p style="font-size:13px; color:var(--text3); margin-bottom:20px;">마크 닉네임과 디스코드 ID를 확인하고 수정할 수 있습니다.</p>
+    <div class="member-table-wrap">
+      <table class="member-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>마인크래프트 닉네임</th>
+            <th>디스코드 사용자명</th>
+            <th>수정</th>
+          </tr>
+        </thead>
+        <tbody id="member-list-body">
+          <tr><td colspan="4" style="text-align:center; color:var(--text3); padding:30px;">불러오는 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -185,7 +228,6 @@ firebase.initializeApp({
   appId: "1:619578457920:web:52d98e7430f9b9820104a5"
 });
 const db = firebase.database();
-const storage = firebase.storage();
 let selectedEv = null;
 let selectedEvTitle = '';
 
@@ -196,22 +238,36 @@ function showTab(id, btn) {
   btn.classList.add('active');
 }
 
-/* ─── 이미지 미리보기 ─── */
+/* ─── 이미지 미리보기 (base64로 변환) ─── */
 function previewUpload() {
   const file = document.getElementById('e-file').files[0];
-  if(!file) return;
+  if (!file) return;
+
+  const statusEl = document.getElementById('upload-status');
+  statusEl.className = 'upload-status uploading';
+  statusEl.innerText = '⏳ 이미지 준비 중...';
+
   const preview = document.getElementById('img-preview');
-  preview.src = URL.createObjectURL(file);
-  preview.style.display = 'block';
-  document.getElementById('upload-status').innerText = `선택됨: ${file.name}`;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    statusEl.className = 'upload-status done';
+    statusEl.innerText = `✅ 선택됨: ${file.name} (저장 시 업로드됩니다)`;
+  };
+  reader.onerror = function() {
+    statusEl.className = 'upload-status error';
+    statusEl.innerText = '❌ 파일 읽기 실패';
+  };
+  reader.readAsDataURL(file);
 }
 
 /* ─── 공지 ─── */
 async function saveNotice() {
   const title = document.getElementById('n-title').value.trim();
   const content = document.getElementById('n-content').value.trim();
-  if(!title || !content) return alert('제목과 내용을 모두 입력해주세요.');
-  await db.ref('notices').push({title, content, time: Date.now()});
+  if (!title || !content) return alert('제목과 내용을 모두 입력해주세요.');
+  await db.ref('notices').push({ title, content, time: Date.now() });
   document.getElementById('n-title').value = '';
   document.getElementById('n-content').value = '';
   alert('공지가 게시되었습니다.');
@@ -221,8 +277,8 @@ async function saveNotice() {
 async function saveServer() {
   const name = document.getElementById('s-name').value.trim();
   const author = document.getElementById('s-author').value.trim();
-  if(!name || !author) return alert('서버 이름과 제작자를 모두 입력해주세요.');
-  await db.ref('servers').push({name, author});
+  if (!name || !author) return alert('서버 이름과 제작자를 모두 입력해주세요.');
+  await db.ref('servers').push({ name, author });
   document.getElementById('s-name').value = '';
   document.getElementById('s-author').value = '';
   alert('서버가 등록되었습니다.');
@@ -231,42 +287,79 @@ async function saveServer() {
 /* ─── 상품 ─── */
 async function saveCoupon() {
   const name = document.getElementById('c-name').value.trim();
-  if(!name) return alert('상품 이름을 입력해주세요.');
-  await db.ref('coupons').push({name});
+  if (!name) return alert('상품 이름을 입력해주세요.');
+  await db.ref('coupons').push({ name });
   document.getElementById('c-name').value = '';
   alert('상품이 추가되었습니다.');
 }
 
-/* ─── 이벤트 등록 ─── */
+/* ─── 이벤트 등록 (base64 이미지를 DB에 저장) ─── */
 async function saveEvent() {
   const title = document.getElementById('e-title').value.trim();
   const desc = document.getElementById('e-desc').value.trim();
   const couponName = document.getElementById('e-coupon-select').value;
-  if(!title) return alert('이벤트 제목을 입력해주세요.');
+  if (!title) return alert('이벤트 제목을 입력해주세요.');
+
   const file = document.getElementById('e-file').files[0];
   const btn = document.getElementById('save-ev-btn');
+  const statusEl = document.getElementById('upload-status');
+
   btn.disabled = true;
   btn.innerText = '저장 중...';
-  let url = "";
+
+  let imgData = '';
+
   try {
-    if(file) {
-      document.getElementById('upload-status').innerText = '이미지 업로드 중...';
-      const ref = storage.ref('events/' + Date.now() + '_' + file.name);
-      await ref.put(file);
-      url = await ref.getDownloadURL();
+    if (file) {
+      statusEl.className = 'upload-status uploading';
+      statusEl.innerText = '⏳ 이미지 처리 중...';
+
+      // 이미지를 base64로 변환 후 압축
+      imgData = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          // 이미지 크기 줄이기 위해 canvas로 리사이즈
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX = 800;
+            let w = img.width, h = img.height;
+            if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.75));
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      statusEl.className = 'upload-status uploading';
+      statusEl.innerText = '⏳ 데이터베이스에 저장 중...';
     }
+
     await db.ref('events/' + Date.now()).set({
-      title, img: url, desc, couponName, status: 'ongoing', createdAt: Date.now()
+      title, img: imgData, desc, couponName, status: 'ongoing', createdAt: Date.now()
     });
+
+    statusEl.className = 'upload-status done';
+    statusEl.innerText = '✅ 저장 완료!';
     alert('이벤트가 게시되었습니다.');
     document.getElementById('e-title').value = '';
     document.getElementById('e-desc').value = '';
     document.getElementById('e-file').value = '';
     document.getElementById('img-preview').style.display = 'none';
-    document.getElementById('upload-status').innerText = '';
-  } catch(err) {
+    setTimeout(() => { statusEl.className = 'upload-status idle'; statusEl.innerText = ''; }, 3000);
+
+  } catch (err) {
+    statusEl.className = 'upload-status error';
+    statusEl.innerText = '❌ 오류: ' + err.message;
     alert('오류 발생: ' + err.message);
   }
+
   btn.disabled = false;
   btn.innerText = '이벤트 저장 및 게시';
 }
@@ -278,14 +371,13 @@ function openEdit(id, ev) {
   document.getElementById('edit-desc').value = ev.desc || '';
   const sel = document.getElementById('edit-coupon-select');
   sel.innerHTML = '<option value="">상품 선택</option>';
-  // 현재 쿠폰 목록 채우기
   db.ref('coupons').once('value').then(snap => {
     snap.forEach(c => {
       sel.innerHTML += `<option ${ev.couponName === c.val().name ? 'selected' : ''}>${c.val().name}</option>`;
     });
   });
   document.getElementById('edit-section').classList.add('show');
-  document.getElementById('edit-section').scrollIntoView({behavior:'smooth'});
+  document.getElementById('edit-section').scrollIntoView({ behavior: 'smooth' });
 }
 
 function closeEdit() {
@@ -297,8 +389,8 @@ async function updateEvent() {
   const title = document.getElementById('edit-title').value.trim();
   const desc = document.getElementById('edit-desc').value.trim();
   const couponName = document.getElementById('edit-coupon-select').value;
-  if(!title) return alert('제목을 입력해주세요.');
-  await db.ref('events/'+id).update({title, desc, couponName});
+  if (!title) return alert('제목을 입력해주세요.');
+  await db.ref('events/' + id).update({ title, desc, couponName });
   alert('수정되었습니다.');
   closeEdit();
 }
@@ -321,7 +413,7 @@ db.ref('events').on('value', snap => {
         <span class="ev-item-title">${ev.title}</span>${badge}
       </div>
       <div class="ev-item-actions" onclick="event.stopPropagation()">
-        <button class="action-btn btn-edit" onclick="openEdit('${e.key}', ${JSON.stringify(ev).replace(/"/g,"&quot;")})">✏️ 수정</button>
+        <button class="action-btn btn-edit" onclick="openEdit('${e.key}', ${JSON.stringify(ev).replace(/"/g, '&quot;')})">✏️ 수정</button>
         ${isEnd
           ? `<button class="action-btn btn-restore" onclick="changeStatus('${e.key}','ongoing')">▶ 재개</button>`
           : `<button class="action-btn btn-end" onclick="changeStatus('${e.key}','ended')">⏹ 종료</button>`
@@ -333,23 +425,30 @@ db.ref('events').on('value', snap => {
     list.appendChild(div);
     count++;
   });
-  if(!count) list.innerHTML = '<div style="padding:20px; color:var(--text3); text-align:center; font-size:14px;">등록된 이벤트가 없습니다</div>';
+  if (!count) list.innerHTML = '<div style="padding:20px; color:var(--text3); text-align:center; font-size:14px;">등록된 이벤트가 없습니다</div>';
 });
 
 function changeStatus(id, status) {
   const msg = status === 'ended' ? '이 이벤트를 종료하시겠습니까?' : '이 이벤트를 다시 진행 중으로 변경하시겠습니까?';
-  if(!confirm(msg)) return;
-  db.ref('events/'+id).update({status});
+  if (!confirm(msg)) return;
+  db.ref('events/' + id).update({ status });
 }
 
 function deleteEvent(id) {
-  if(!confirm('이벤트를 삭제하면 참여자 데이터도 함께 삭제됩니다. 계속하시겠습니까?')) return;
-  db.ref('events/'+id).remove();
-  db.ref('participants/'+id).remove();
-  if(selectedEv === id) {
+  if (!confirm('이벤트를 삭제하면 참여자 데이터도 함께 삭제됩니다. 계속하시겠습니까?')) return;
+  db.ref('events/' + id).remove();
+  db.ref('participants/' + id).remove();
+  if (selectedEv === id) {
     selectedEv = null;
     document.getElementById('part-box').style.display = 'none';
   }
+}
+
+/* ─── 당첨자 패널 닫기 ─── */
+function closePartBox() {
+  selectedEv = null;
+  document.getElementById('part-box').style.display = 'none';
+  document.querySelectorAll('.ev-item').forEach(el => el.classList.remove('selected'));
 }
 
 /* ─── 참여자 & 당첨자 ─── */
@@ -357,27 +456,26 @@ async function loadParts(id, title) {
   selectedEv = id;
   selectedEvTitle = title;
   document.querySelectorAll('.ev-item').forEach(el => el.classList.remove('selected'));
-  event.currentTarget && event.currentTarget.classList && event.currentTarget.classList.add('selected');
 
   document.getElementById('selected-ev-title').innerText = title;
   document.getElementById('part-box').style.display = 'block';
   document.getElementById('user-list').innerHTML = '<span style="color:var(--text3);font-size:13px;">불러오는 중...</span>';
 
   const [pSnap, eSnap] = await Promise.all([
-    db.ref('participants/'+id).once('value'),
-    db.ref('events/'+id).once('value')
+    db.ref('participants/' + id).once('value'),
+    db.ref('events/' + id).once('value')
   ]);
   const winners = eSnap.val().winners || {};
   renderParticipants(pSnap, winners);
   renderWinners(winners);
 
-  document.getElementById('part-box').scrollIntoView({behavior:'smooth'});
+  document.getElementById('part-box').scrollIntoView({ behavior: 'smooth' });
 }
 
 function renderWinners(winners) {
   const box = document.getElementById('winner-chips-box');
   const keys = Object.keys(winners);
-  if(!keys.length) {
+  if (!keys.length) {
     box.innerHTML = '<span style="color:var(--text3);font-size:13px;">아직 당첨자가 없습니다</span>';
     return;
   }
@@ -391,7 +489,7 @@ function renderWinners(winners) {
 
 function renderParticipants(pSnap, winners) {
   const box = document.getElementById('user-list');
-  if(!pSnap.exists()) {
+  if (!pSnap.exists()) {
     box.innerHTML = '<span style="color:var(--text3);font-size:13px;">참여자가 없습니다</span>';
     return;
   }
@@ -399,24 +497,23 @@ function renderParticipants(pSnap, winners) {
   pSnap.forEach(p => {
     const nick = p.val().nick;
     const isWin = !!winners[nick];
-    html += `<div class="user-badge ${isWin?'win':''}" onclick="toggleWin('${nick}')">${isWin?'🏆 ':''}${nick}</div>`;
+    html += `<div class="user-badge ${isWin ? 'win' : ''}" onclick="toggleWin('${nick}')">${isWin ? '🏆 ' : ''}${nick}</div>`;
   });
   box.innerHTML = html;
 }
 
 async function toggleWin(nick) {
-  if(!selectedEv) return;
+  if (!selectedEv) return;
   const ref = db.ref(`events/${selectedEv}/winners/${nick}`);
   const snap = await ref.once('value');
-  if(snap.exists()) {
+  if (snap.exists()) {
     await ref.remove();
   } else {
-    await ref.set({nick, alerted: false, time: Date.now()});
+    await ref.set({ nick, alerted: false, time: Date.now() });
   }
-  // 새로고침
   const [pSnap, eSnap] = await Promise.all([
-    db.ref('participants/'+selectedEv).once('value'),
-    db.ref('events/'+selectedEv).once('value')
+    db.ref('participants/' + selectedEv).once('value'),
+    db.ref('events/' + selectedEv).once('value')
   ]);
   const winners = eSnap.val().winners || {};
   renderParticipants(pSnap, winners);
@@ -438,7 +535,7 @@ db.ref('coupons').on('value', snap => {
     list.appendChild(div);
     count++;
   });
-  if(!count) list.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center;font-size:14px;">등록된 상품이 없습니다</div>';
+  if (!count) list.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center;font-size:14px;">등록된 상품이 없습니다</div>';
 });
 
 /* ─── 서버 목록 실시간 ─── */
@@ -453,7 +550,7 @@ db.ref('servers').on('value', snap => {
     list.appendChild(div);
     count++;
   });
-  if(!count) list.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center;font-size:14px;">등록된 서버가 없습니다</div>';
+  if (!count) list.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center;font-size:14px;">등록된 서버가 없습니다</div>';
 });
 
 /* ─── 공지 목록 실시간 ─── */
@@ -461,12 +558,12 @@ db.ref('notices').orderByChild('time').on('value', snap => {
   const list = document.getElementById('admin-nt-list');
   list.innerHTML = '';
   const items = [];
-  snap.forEach(n => items.unshift({key: n.key, val: n.val()})); // 최신순
-  if(!items.length) {
+  snap.forEach(n => items.unshift({ key: n.key, val: n.val() }));
+  if (!items.length) {
     list.innerHTML = '<div style="padding:20px;color:var(--text3);text-align:center;font-size:14px;">등록된 공지가 없습니다</div>';
     return;
   }
-  items.forEach(({key, val}) => {
+  items.forEach(({ key, val }) => {
     const div = document.createElement('div');
     div.className = 'list-item';
     div.style.flexDirection = 'column';
@@ -481,6 +578,90 @@ db.ref('notices').orderByChild('time').on('value', snap => {
     list.appendChild(div);
   });
 });
+
+/* ─── 회원 목록 실시간 ─── */
+db.ref('users').on('value', snap => {
+  const tbody = document.getElementById('member-list-body');
+  tbody.innerHTML = '';
+  let count = 0;
+
+  snap.forEach(u => {
+    const nick = u.key;
+    const data = u.val();
+    count++;
+    const tr = document.createElement('tr');
+    tr.id = `member-row-${nick}`;
+    tr.innerHTML = `
+      <td style="color:var(--text3); font-size:12px;">${count}</td>
+      <td>
+        <span id="nick-display-${nick}" style="font-weight:700;">${nick}</span>
+      </td>
+      <td>
+        <span id="discord-display-${nick}" style="color:var(--text2);">${data.discord || '—'}</span>
+        <input type="text" id="discord-input-${nick}" class="member-edit-input" value="${data.discord || ''}" style="display:none;">
+      </td>
+      <td>
+        <div id="view-actions-${nick}" style="display:flex; gap:6px;">
+          <button class="action-btn btn-edit" onclick="startEditMember('${nick}')">✏️ 수정</button>
+          <button class="action-btn btn-delete" onclick="deleteMember('${nick}')">🗑 삭제</button>
+        </div>
+        <div id="edit-actions-${nick}" style="display:none; gap:6px;">
+          <button class="action-btn btn-save" onclick="saveMember('${nick}')">✅ 저장</button>
+          <button class="action-btn" onclick="cancelEditMember('${nick}')" style="background:#eee; color:var(--text2);">취소</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (!count) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text3); padding:30px;">가입한 회원이 없습니다</td></tr>';
+  }
+});
+
+function startEditMember(nick) {
+  document.getElementById(`discord-display-${nick}`).style.display = 'none';
+  document.getElementById(`discord-input-${nick}`).style.display = 'block';
+  document.getElementById(`view-actions-${nick}`).style.display = 'none';
+  document.getElementById(`edit-actions-${nick}`).style.display = 'flex';
+}
+
+function cancelEditMember(nick) {
+  // 기존 값 복원
+  const displayEl = document.getElementById(`discord-display-${nick}`);
+  const inputEl = document.getElementById(`discord-input-${nick}`);
+  inputEl.value = displayEl.innerText === '—' ? '' : displayEl.innerText;
+  inputEl.style.display = 'none';
+  displayEl.style.display = 'inline';
+  document.getElementById(`view-actions-${nick}`).style.display = 'flex';
+  document.getElementById(`edit-actions-${nick}`).style.display = 'none';
+}
+
+async function saveMember(nick) {
+  const newDiscord = document.getElementById(`discord-input-${nick}`).value.trim();
+
+  // 디스코드 중복 확인 (자기 자신 제외)
+  if (newDiscord) {
+    const allUsers = await db.ref('users').once('value');
+    let dup = false;
+    allUsers.forEach(u => {
+      if (u.key !== nick && u.val().discord && u.val().discord.toLowerCase() === newDiscord.toLowerCase()) {
+        dup = true;
+      }
+    });
+    if (dup) return alert('이미 다른 회원이 사용 중인 디스코드 사용자명입니다.');
+  }
+
+  await db.ref(`users/${nick}`).update({ discord: newDiscord });
+  alert('수정되었습니다.');
+  // 실시간 리스너가 자동 갱신함
+}
+
+async function deleteMember(nick) {
+  if (!confirm(`"${nick}" 회원을 삭제하시겠습니까?\n해당 회원의 모든 데이터가 삭제됩니다.`)) return;
+  await db.ref(`users/${nick}`).remove();
+  alert('삭제되었습니다.');
+}
 </script>
 </body>
 </html>
